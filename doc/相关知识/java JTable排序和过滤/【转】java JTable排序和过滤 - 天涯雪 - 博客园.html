@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="zh-cn"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="never">
+    <meta http-equiv="Cache-Control" content="no-transform">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <title>【转】java JTable排序和过滤 - 天涯雪 - 博客园</title>
+    <meta property="og:description" content="JTable排序 在JavaSE6中除了java.awt被更新外，javax.swing同时也有了很大的改进。在C/S程序中我们会经常使 用到&quot;表&quot;。如我们可以在查询数据库后将查询">
+    <link type="text/css" rel="stylesheet" href="%E3%80%90%E8%BD%AC%E3%80%91java%20JTable%E6%8E%92%E5%BA%8F%E5%92%8C%E8%BF%87%E6%BB%A4%20-%20%E5%A4%A9%E6%B6%AF%E9%9B%AA%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/blog-common.css">
+<link id="MainCss" type="text/css" rel="stylesheet" href="%E3%80%90%E8%BD%AC%E3%80%91java%20JTable%E6%8E%92%E5%BA%8F%E5%92%8C%E8%BF%87%E6%BB%A4%20-%20%E5%A4%A9%E6%B6%AF%E9%9B%AA%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/bundle-summerGarden.css">
+<link id="mobile-style" media="only screen and (max-width: 767px)" type="text/css" rel="stylesheet" href="%E3%80%90%E8%BD%AC%E3%80%91java%20JTable%E6%8E%92%E5%BA%8F%E5%92%8C%E8%BF%87%E6%BB%A4%20-%20%E5%A4%A9%E6%B6%AF%E9%9B%AA%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/bundle-summerGarden-mobile.css">
+    <link title="RSS" type="application/rss+xml" rel="alternate" href="https://www.cnblogs.com/tianyaxue/rss">
+    <link title="RSD" type="application/rsd+xml" rel="EditURI" href="https://www.cnblogs.com/tianyaxue/rsd.xml">
+<link type="application/wlwmanifest+xml" rel="wlwmanifest" href="https://www.cnblogs.com/tianyaxue/wlwmanifest.xml">
+    <script src="%E3%80%90%E8%BD%AC%E3%80%91java%20JTable%E6%8E%92%E5%BA%8F%E5%92%8C%E8%BF%87%E6%BB%A4%20-%20%E5%A4%A9%E6%B6%AF%E9%9B%AA%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/amp4ads-host-v0.js"></script><script src="%E3%80%90%E8%BD%AC%E3%80%91java%20JTable%E6%8E%92%E5%BA%8F%E5%92%8C%E8%BF%87%E6%BB%A4%20-%20%E5%A4%A9%E6%B6%AF%E9%9B%AA%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/pubads_impl_rendering_2019053001.js"></script><script async="" src="%E3%80%90%E8%BD%AC%E3%80%91java%20JTable%E6%8E%92%E5%BA%8F%E5%92%8C%E8%BF%87%E6%BB%A4%20-%20%E5%A4%A9%E6%B6%AF%E9%9B%AA%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/analytics.js"></script><script src="%E3%80%90%E8%BD%AC%E3%80%91java%20JTable%E6%8E%92%E5%BA%8F%E5%92%8C%E8%BF%87%E6%BB%A4%20-%20%E5%A4%A9%E6%B6%AF%E9%9B%AA%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/jquery-2.js"></script>
+    <script>var currentBlogId=154826;var currentBlogApp='tianyaxue',cb_enable_mathjax=false;var isLogined=true;</script>
+    <script src="%E3%80%90%E8%BD%AC%E3%80%91java%20JTable%E6%8E%92%E5%BA%8F%E5%92%8C%E8%BF%87%E6%BB%A4%20-%20%E5%A4%A9%E6%B6%AF%E9%9B%AA%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/blog-common.js" type="text/javascript"></script>
+<link rel="preload" href="%E3%80%90%E8%BD%AC%E3%80%91java%20JTable%E6%8E%92%E5%BA%8F%E5%92%8C%E8%BF%87%E6%BB%A4%20-%20%E5%A4%A9%E6%B6%AF%E9%9B%AA%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/integrator.js" as="script"><script type="text/javascript" src="%E3%80%90%E8%BD%AC%E3%80%91java%20JTable%E6%8E%92%E5%BA%8F%E5%92%8C%E8%BF%87%E6%BB%A4%20-%20%E5%A4%A9%E6%B6%AF%E9%9B%AA%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/integrator.js"></script><script src="%E3%80%90%E8%BD%AC%E3%80%91java%20JTable%E6%8E%92%E5%BA%8F%E5%92%8C%E8%BF%87%E6%BB%A4%20-%20%E5%A4%A9%E6%B6%AF%E9%9B%AA%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/pubads_impl_2019053001.js" async=""></script></head>
+<body>
+<a name="top"></a>
+
+
+<!--done-->
+<div id="home">
+<div id="header">
+	<div id="blogTitle">
+	<a id="lnkBlogLogo" href="https://www.cnblogs.com/tianyaxue/"><img id="blogLogo" src="%E3%80%90%E8%BD%AC%E3%80%91java%20JTable%E6%8E%92%E5%BA%8F%E5%92%8C%E8%BF%87%E6%BB%A4%20-%20%E5%A4%A9%E6%B6%AF%E9%9B%AA%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/logo.gif" alt="返回主页"></a>			
+		
+<!--done-->
+<h1><a id="Header1_HeaderTitle" class="headermaintitle" href="https://www.cnblogs.com/tianyaxue/">天涯雪</a></h1>
+<h2></h2>
+
+
+
+		
+	</div><!--end: blogTitle 博客的标题和副标题 -->
+	<div id="navigator">
+		
+<ul id="navList">
+	<li><a id="blog_nav_sitehome" class="menu" href="https://www.cnblogs.com/">博客园</a></li>
+	<li><a id="blog_nav_myhome" class="menu" href="https://www.cnblogs.com/tianyaxue/">首页</a></li>
+	<li><a href="http://news.cnblogs.com/">新闻</a></li>
+	<li><a id="blog_nav_newpost" class="menu" rel="nofollow" href="https://i.cnblogs.com/EditPosts.aspx?opt=1">新随笔</a></li>
+	<li><a id="blog_nav_contact" accesskey="9" class="menu" rel="nofollow" href="https://msg.cnblogs.com/send/%E5%A4%A9%E6%B6%AF%E9%9B%AA">联系</a></li>
+	<li><a id="blog_nav_admin" class="menu" rel="nofollow" href="https://i.cnblogs.com/">管理</a></li>
+	<li><a id="blog_nav_rss" class="menu" href="https://www.cnblogs.com/tianyaxue/rss">订阅</a>
+	<a id="blog_nav_rss_image" class="aHeaderXML" href="https://www.cnblogs.com/tianyaxue/rss"><img src="%E3%80%90%E8%BD%AC%E3%80%91java%20JTable%E6%8E%92%E5%BA%8F%E5%92%8C%E8%BF%87%E6%BB%A4%20-%20%E5%A4%A9%E6%B6%AF%E9%9B%AA%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/xml.gif" alt="订阅"></a></li>
+</ul>
+
+
+		<div class="blogStats">
+			
+			<div id="blog_stats">
+<!--done-->
+随笔- 52&nbsp;
+文章- 1&nbsp;
+评论- 0&nbsp;
+</div>
+			
+		</div><!--end: blogStats -->
+	</div><!--end: navigator 博客导航栏 -->
+</div><!--end: header 头部 -->
+
+<div id="main">
+	<div id="mainContent">
+	<div class="forFlow">
+		
+        <div id="post_detail">
+<!--done-->
+<div id="topics">
+	<div class="post">
+		<h1 class="postTitle">
+			<a id="cb_post_title_url" class="postTitle2" href="https://www.cnblogs.com/tianyaxue/p/3494291.html">【转】java JTable排序和过滤</a>
+		</h1>
+		<div class="clear"></div>
+		<div class="postBody">
+			<div id="cnblogs_post_body" class="blogpost-body"><p align="left"><span><span>JTable排序</span></span></p>
+<p align="left">　　在Java&nbsp;SE&nbsp;6中除了java.awt被更新外，javax.swing同时也有了很大
+的改进。在C/S程序中我们会经常使 
+用到"表"。如我们可以在查询数据库后将查询结果显示在表格中。在Java中显示表格使用的是JTable类。在以前的版本中，JTable只能简单地显
+ 
+示数据，并没有什么附加的处理功能，而在Java&nbsp;SE&nbsp;6中的JTable增加了排序和过滤功能。用户可以单击列头进行排序，也可
+以根据某一列来过滤表 中的数据。<br><br>为了使JTable可以对数据进行，必须将RowSorter类和JTable进行关联。
+RowSorter是一个抽象类，它负责将JTable中的 
+数据映射成可排序的数据。在真正使用时，我们将直接使用RowSorter的子类TableRowSorter。下面的代码显示了如何将
+TableRowSorter类和JTable相关联。</p>
+<p align="left">&nbsp;</p>
+<div class="dp-highlighter bg_java">
+<div class="bar">
+<div class="tools"><strong>[java]</strong>&nbsp;<a class="ViewSource" title="view plain" href="http://blog.csdn.net/b_h_l/article/details/7771944">view plain</a><a class="CopyToClipboard" title="copy" href="http://blog.csdn.net/b_h_l/article/details/7771944">copy</a>
+<div><object id="ZeroClipboardMovie_1" bgcolor="#ffffff" data="http://static.blog.csdn.net/scripts/ZeroClipboard/ZeroClipboard.swf" type="application/x-shockwave-flash" width="18" height="18" align="middle"><param name="src" value="http://static.blog.csdn.net/scripts/ZeroClipboard/ZeroClipboard.swf"><param name="loop" value="loop"><param name="menu" value="false"><param name="quality" value="best"><param name="allowscriptaccess" value="always"><param name="allowfullscreen" value="false"><param name="pluginspage" value="http://www.macromedia.com/go/getflashplayer"><param name="flashvars" value="id=1&amp;width=18&amp;height=18"><param name="wmode" value="transparent"></object></div>
+
+</div>
+
+</div>
+<ol class="dp-j" start="1">
+<li class="alt"><span><span>TableModel&nbsp;model&nbsp;=&nbsp;</span><span class="keyword">new</span><span>&nbsp;DefaultTableModel(rows,&nbsp;columns);&nbsp;&nbsp;</span></span></li>
+<li><span>JTable&nbsp;table&nbsp;=&nbsp;<span class="keyword">new</span><span>&nbsp;JTable(model);&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>RowSorter&nbsp;sorter&nbsp;=&nbsp;<span class="keyword">new</span><span>&nbsp;TableRowSorter(model);&nbsp;&nbsp;</span></span></li>
+<li><span>table.setRowSorter(sorter);&nbsp;&nbsp;</span></li>
+
+</ol></div>
+<p>&nbsp;</p>
+<p align="left">上面代码首先建立一个TableModel，然后将这个TableModel的实例同时传递给了JTable和RowSorter。下面是一个使用JTable排序的简单的例子。</p>
+<p align="left">&nbsp;</p>
+<div class="dp-highlighter bg_java">
+<div class="bar">
+<div class="tools"><strong>[java]</strong>&nbsp;<a class="ViewSource" title="view plain" href="http://blog.csdn.net/b_h_l/article/details/7771944">view plain</a><a class="CopyToClipboard" title="copy" href="http://blog.csdn.net/b_h_l/article/details/7771944">copy</a>
+<div><object id="ZeroClipboardMovie_2" bgcolor="#ffffff" data="http://static.blog.csdn.net/scripts/ZeroClipboard/ZeroClipboard.swf" type="application/x-shockwave-flash" width="18" height="18" align="middle"><param name="src" value="http://static.blog.csdn.net/scripts/ZeroClipboard/ZeroClipboard.swf"><param name="loop" value="loop"><param name="menu" value="false"><param name="quality" value="best"><param name="allowscriptaccess" value="always"><param name="allowfullscreen" value="false"><param name="pluginspage" value="http://www.macromedia.com/go/getflashplayer"><param name="flashvars" value="id=2&amp;width=18&amp;height=18"><param name="wmode" value="transparent"></object></div>
+
+</div>
+
+</div>
+<ol class="dp-j" start="1">
+<li class="alt"><span><span class="keyword">import</span><span>&nbsp;javax.swing.*;&nbsp;&nbsp;</span></span></li>
+<li><span><span class="keyword">import</span><span>&nbsp;javax.swing.table.*;&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span><span class="keyword">import</span><span>&nbsp;java.awt.*;&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;</span></li>
+<li class="alt"><span><span class="keyword">public</span><span>&nbsp;</span><span class="keyword">class</span><span>&nbsp;TestSortedTable&nbsp;{&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">public</span><span>&nbsp;</span><span class="keyword">static</span><span>&nbsp;</span><span class="keyword">void</span><span>&nbsp;main(String&nbsp;args[])&nbsp;{&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JFrame&nbsp;frame&nbsp;=&nbsp;<span class="keyword">new</span><span>&nbsp;JFrame(</span><span class="string">"JTable的排序测试"</span><span>);&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);&nbsp;&nbsp;</span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">//&nbsp;表格中显示的数据</span><span>&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Object&nbsp;rows[][]&nbsp;=&nbsp;{&nbsp;{&nbsp;<span class="string">"王明"</span><span>,&nbsp;</span><span class="string">"中国"</span><span>,&nbsp;</span><span class="number">44</span><span>&nbsp;},&nbsp;{&nbsp;</span><span class="string">"姚明"</span><span>,&nbsp;</span><span class="string">"中国"</span><span>,&nbsp;</span><span class="number">25</span><span>&nbsp;},&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<span class="string">"赵子龙"</span><span>,&nbsp;</span><span class="string">"西蜀"</span><span>,&nbsp;</span><span class="number">1234</span><span>&nbsp;},&nbsp;{&nbsp;</span><span class="string">"曹操"</span><span>,&nbsp;</span><span class="string">"北魏"</span><span>,&nbsp;</span><span class="number">2112</span><span>&nbsp;},&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<span class="string">"Bill&nbsp;Gates"</span><span>,&nbsp;</span><span class="string">"美国"</span><span>,&nbsp;</span><span class="number">45</span><span>&nbsp;},&nbsp;{&nbsp;</span><span class="string">"Mike"</span><span>,&nbsp;</span><span class="string">"英国"</span><span>,&nbsp;</span><span class="number">33</span><span>&nbsp;}&nbsp;};&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;String&nbsp;columns[]&nbsp;=&nbsp;{&nbsp;<span class="string">"姓名"</span><span>,&nbsp;</span><span class="string">"国籍"</span><span>,&nbsp;</span><span class="string">"年龄"</span><span>&nbsp;};&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TableModel&nbsp;model&nbsp;=&nbsp;<span class="keyword">new</span><span>&nbsp;DefaultTableModel(rows,&nbsp;columns);&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JTable&nbsp;table&nbsp;=&nbsp;<span class="keyword">new</span><span>&nbsp;JTable(model);&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RowSorter&lt;TableModel&gt;&nbsp;sorter&nbsp;=&nbsp;<span class="keyword">new</span><span>&nbsp;TableRowSorter&lt;TableModel&gt;(model);&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;table.setRowSorter(sorter);&nbsp;&nbsp;</span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JScrollPane&nbsp;pane&nbsp;=&nbsp;<span class="keyword">new</span><span>&nbsp;JScrollPane(table);&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;frame.add(pane,&nbsp;BorderLayout.CENTER);&nbsp;&nbsp;</span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;frame.setSize(<span class="number">300</span><span>,&nbsp;</span><span class="number">150</span><span>);&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;frame.setVisible(<span class="keyword">true</span><span>);&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;&nbsp;</span></li>
+<li class="alt"><span>}&nbsp;&nbsp;</span></li>
+
+</ol></div>
+<p>&nbsp;</p>
+<div><img src="http://my.csdn.net/uploads/201207/22/1342923924_3239.png" alt="" width="500" height="400"></div>
+<p>&nbsp;</p>
+<p align="left">图3显示的是按"年龄"进行降序排列。但我们发现一个奇怪的问题，就是"年龄"字段并不是按数值类型进行排序的，而是按字符类型进行排序的。</p>
+<div align="center"><img src="http://my.csdn.net/uploads/201207/22/1342923990_9857.png" alt=""></div>
+<p align="left"><br>出现这种情况是因为在默认情况下DefaultTableModal的列是Object类型。而要想使JTable按数值进行排序，必须要覆盖DefaultTableModal的getColumnClass方法。</p>
+<p align="left">&nbsp;</p>
+<div class="dp-highlighter bg_java">
+<div class="bar">
+<div class="tools"><strong>[java]</strong>&nbsp;<a class="ViewSource" title="view plain" href="http://blog.csdn.net/b_h_l/article/details/7771944">view plain</a><a class="CopyToClipboard" title="copy" href="http://blog.csdn.net/b_h_l/article/details/7771944">copy</a>
+<div><object id="ZeroClipboardMovie_3" bgcolor="#ffffff" data="http://static.blog.csdn.net/scripts/ZeroClipboard/ZeroClipboard.swf" type="application/x-shockwave-flash" width="18" height="18" align="middle"><param name="src" value="http://static.blog.csdn.net/scripts/ZeroClipboard/ZeroClipboard.swf"><param name="loop" value="loop"><param name="menu" value="false"><param name="quality" value="best"><param name="allowscriptaccess" value="always"><param name="allowfullscreen" value="false"><param name="pluginspage" value="http://www.macromedia.com/go/getflashplayer"><param name="flashvars" value="id=3&amp;width=18&amp;height=18"><param name="wmode" value="transparent"></object></div>
+
+</div>
+
+</div>
+<ol class="dp-j" start="1">
+<li class="alt"><span><span>TableModel&nbsp;model&nbsp;=&nbsp;</span><span class="keyword">new</span><span>&nbsp;DefaultTableModel(rows,&nbsp;columns)&nbsp;{&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">public</span><span>&nbsp;Class&nbsp;getColumnClass(</span><span class="keyword">int</span><span>&nbsp;column)&nbsp;{&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Class&nbsp;returnValue;&nbsp;&nbsp;</span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span><span>&nbsp;((column&nbsp;&gt;=&nbsp;</span><span class="number">0</span><span>)&nbsp;&amp;&amp;&nbsp;(column&nbsp;&lt;&nbsp;getColumnCount()))&nbsp;{&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;returnValue&nbsp;=&nbsp;getValueAt(<span class="number">0</span><span>,&nbsp;column).getClass();&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<span class="keyword">else</span><span>&nbsp;{&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;returnValue&nbsp;=&nbsp;Object.<span class="keyword">class</span><span>;&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;&nbsp;</span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span><span>&nbsp;returnValue;&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;&nbsp;</span></li>
+<li class="alt"><span>};&nbsp;&nbsp;</span></li>
+
+</ol></div>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<div align="center">图4显示了按"年龄"进行排序的界面，看看，是不是按数值进行排序了。</div>
+<div align="center"><img src="http://my.csdn.net/uploads/201207/22/1342924157_4830.png" alt=""></div>
+<p align="left"><span><span>JTable过滤</span></span></p>
+<p align="left">在JTable中通过抽象类RowFilter类对行进行过滤。和排序不同，你可以不建立它们的子类，而使用这个抽象类的6个静态方法。<br><br>·andFilter<br>·dateFilter(RowFilter.ComparisonType&nbsp;type,&nbsp;Date&nbsp;date,&nbsp;int...&nbsp;indices)<br>·notFilter(RowFilter&lt;M,I&gt;&nbsp;filter)<br>·numberFilter(RowFilter.ComparisonType&nbsp;type,&nbsp;Number&nbsp;number,&nbsp;int...&nbsp;indices)<br>·orFilter<br>·regexFilter(String&nbsp;regex,&nbsp;int...&nbsp;indices)<br><br>其中andFilter()、orFilter()以及notFilter()方法的功能是将当前的过滤条件和其它的过滤条件进行组合。如在同时比较日期和数值时需要将日期过滤和数值过滤进行组合。这些组合是非常简单的。<br><br>RowFilter
+的类型比较允许你进行4种关系的比较，等于、不等于、大于或小于。我们可以通过指定某一列进行过滤，也可以对所有的列进行过滤。这 
+其中最为有趣的也许是正则表达式过滤(regular&nbsp;expression&nbsp;filter，或简称为
+regex&nbsp;filter)。使用这个过滤器可以对 表中数据进行更高级的过滤。下面是实现一个简单过滤器的代码。</p>
+<p align="left">&nbsp;</p>
+<div class="dp-highlighter bg_java">
+<div class="bar">
+<div class="tools"><strong>[java]</strong>&nbsp;<a class="ViewSource" title="view plain" href="http://blog.csdn.net/b_h_l/article/details/7771944">view plain</a><a class="CopyToClipboard" title="copy" href="http://blog.csdn.net/b_h_l/article/details/7771944">copy</a>
+<div><object id="ZeroClipboardMovie_4" bgcolor="#ffffff" data="http://static.blog.csdn.net/scripts/ZeroClipboard/ZeroClipboard.swf" type="application/x-shockwave-flash" width="18" height="18" align="middle"><param name="src" value="http://static.blog.csdn.net/scripts/ZeroClipboard/ZeroClipboard.swf"><param name="loop" value="loop"><param name="menu" value="false"><param name="quality" value="best"><param name="allowscriptaccess" value="always"><param name="allowfullscreen" value="false"><param name="pluginspage" value="http://www.macromedia.com/go/getflashplayer"><param name="flashvars" value="id=4&amp;width=18&amp;height=18"><param name="wmode" value="transparent"></object></div>
+
+</div>
+
+</div>
+<ol class="dp-j" start="1">
+<li class="alt"><span><span class="keyword">import</span><span>&nbsp;javax.swing.*;&nbsp;&nbsp;</span></span></li>
+<li><span><span class="keyword">import</span><span>&nbsp;javax.swing.table.*;&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span><span class="keyword">import</span><span>&nbsp;java.awt.*;&nbsp;&nbsp;</span></span></li>
+<li><span><span class="keyword">import</span><span>&nbsp;java.awt.event.*;&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;</span></li>
+<li><span><span class="keyword">public</span><span>&nbsp;</span><span class="keyword">class</span><span>&nbsp;TestFilter&nbsp;{&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">public</span><span>&nbsp;</span><span class="keyword">static</span><span>&nbsp;</span><span class="keyword">void</span><span>&nbsp;main(String&nbsp;args[])&nbsp;{&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JFrame&nbsp;frame&nbsp;=&nbsp;<span class="keyword">new</span><span>&nbsp;JFrame(</span><span class="string">"JTable的过滤测试"</span><span>);&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);&nbsp;&nbsp;</span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Object&nbsp;rows[][]&nbsp;=&nbsp;{&nbsp;{&nbsp;<span class="string">"王明"</span><span>,&nbsp;</span><span class="string">"中国"</span><span>,&nbsp;</span><span class="number">44</span><span>&nbsp;},&nbsp;{&nbsp;</span><span class="string">"姚明"</span><span>,&nbsp;</span><span class="string">"中国"</span><span>,&nbsp;</span><span class="number">25</span><span>&nbsp;},&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<span class="string">"赵子龙"</span><span>,&nbsp;</span><span class="string">"西蜀"</span><span>,&nbsp;</span><span class="number">1234</span><span>&nbsp;},&nbsp;{&nbsp;</span><span class="string">"曹操"</span><span>,&nbsp;</span><span class="string">"北魏"</span><span>,&nbsp;</span><span class="number">2112</span><span>&nbsp;},&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<span class="string">"Bill&nbsp;Gates"</span><span>,&nbsp;</span><span class="string">"美国"</span><span>,&nbsp;</span><span class="number">45</span><span>&nbsp;},&nbsp;{&nbsp;</span><span class="string">"Mike"</span><span>,&nbsp;</span><span class="string">"英国"</span><span>,&nbsp;</span><span class="number">33</span><span>&nbsp;}&nbsp;};&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;String&nbsp;columns[]&nbsp;=&nbsp;{&nbsp;<span class="string">"姓名"</span><span>,&nbsp;</span><span class="string">"国籍"</span><span>,&nbsp;</span><span class="string">"年龄"</span><span>&nbsp;};&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TableModel&nbsp;model&nbsp;=&nbsp;<span class="keyword">new</span><span>&nbsp;DefaultTableModel(rows,&nbsp;columns)&nbsp;{&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">public</span><span>&nbsp;Class&nbsp;getColumnClass(</span><span class="keyword">int</span><span>&nbsp;column)&nbsp;{&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Class&nbsp;returnValue;&nbsp;&nbsp;</span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span><span>&nbsp;((column&nbsp;&gt;=&nbsp;</span><span class="number">0</span><span>)&nbsp;&amp;&amp;&nbsp;(column&nbsp;&lt;&nbsp;getColumnCount()))&nbsp;{&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;returnValue&nbsp;=&nbsp;getValueAt(<span class="number">0</span><span>,&nbsp;column).getClass();&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<span class="keyword">else</span><span>&nbsp;{&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;returnValue&nbsp;=&nbsp;Object.<span class="keyword">class</span><span>;&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;&nbsp;</span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span><span>&nbsp;returnValue;&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;&nbsp;</span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;};&nbsp;&nbsp;</span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">final</span><span>&nbsp;JTable&nbsp;table&nbsp;=&nbsp;</span><span class="keyword">new</span><span>&nbsp;JTable(model);&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">final</span><span>&nbsp;TableRowSorter&lt;TableModel&gt;&nbsp;sorter&nbsp;=&nbsp;</span><span class="keyword">new</span><span>&nbsp;TableRowSorter&lt;TableModel&gt;(&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;model);&nbsp;&nbsp;</span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;table.setRowSorter(sorter);&nbsp;&nbsp;</span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JScrollPane&nbsp;pane&nbsp;=&nbsp;<span class="keyword">new</span><span>&nbsp;JScrollPane(table);&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;frame.add(pane,&nbsp;BorderLayout.CENTER);&nbsp;&nbsp;</span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JPanel&nbsp;panel&nbsp;=&nbsp;<span class="keyword">new</span><span>&nbsp;JPanel(</span><span class="keyword">new</span><span>&nbsp;BorderLayout());&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JLabel&nbsp;label&nbsp;=&nbsp;<span class="keyword">new</span><span>&nbsp;JLabel(</span><span class="string">"过滤"</span><span>);&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;panel.add(label,&nbsp;BorderLayout.WEST);&nbsp;&nbsp;</span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">final</span><span>&nbsp;JTextField&nbsp;filterText&nbsp;=&nbsp;</span><span class="keyword">new</span><span>&nbsp;JTextField(</span><span class="string">""</span><span>);&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;panel.add(filterText,&nbsp;BorderLayout.CENTER);&nbsp;&nbsp;</span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;frame.add(panel,&nbsp;BorderLayout.NORTH);&nbsp;&nbsp;</span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JButton&nbsp;button&nbsp;=&nbsp;<span class="keyword">new</span><span>&nbsp;JButton(</span><span class="string">"过滤"</span><span>);&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;button.addActionListener(<span class="keyword">new</span><span>&nbsp;ActionListener()&nbsp;{&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">public</span><span>&nbsp;</span><span class="keyword">void</span><span>&nbsp;actionPerformed(ActionEvent&nbsp;e)&nbsp;{&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;String&nbsp;text&nbsp;=&nbsp;filterText.getText();&nbsp;&nbsp;</span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span><span>&nbsp;(text.length()&nbsp;==&nbsp;</span><span class="number">0</span><span>)&nbsp;{&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sorter.setRowFilter(<span class="keyword">null</span><span>);&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<span class="keyword">else</span><span>&nbsp;{&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sorter.setRowFilter(RowFilter.regexFilter(text));&nbsp;&nbsp;</span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;&nbsp;</span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;&nbsp;</span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;});&nbsp;&nbsp;</span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;frame.add(button,&nbsp;BorderLayout.SOUTH);&nbsp;&nbsp;</span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;frame.setSize(<span class="number">300</span><span>,&nbsp;</span><span class="number">250</span><span>);&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;frame.setVisible(<span class="keyword">true</span><span>);&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;&nbsp;</span></li>
+<li><span>}&nbsp;&nbsp;</span></li>
+
+</ol></div>
+<p align="left">图5是上面程序的运行界面。</p>
+<div><img src="http://my.csdn.net/uploads/201207/22/1342924335_8856.png" alt=""></div>
+<p><span>&nbsp;</span></p>
+<p><span>以下是销售系统中表格中实现过滤功能，过滤第5列即销售列（字段包括“已售”、“预订"、”未售“），<br></span></p>
+<p>&nbsp;</p>
+<div class="dp-highlighter bg_java">
+<div class="bar">
+<div class="tools"><strong>[java]</strong>&nbsp;<a class="ViewSource" title="view plain" href="http://blog.csdn.net/b_h_l/article/details/7771944">view plain</a><a class="CopyToClipboard" title="copy" href="http://blog.csdn.net/b_h_l/article/details/7771944">copy</a>
+<div><object id="ZeroClipboardMovie_5" bgcolor="#ffffff" data="http://static.blog.csdn.net/scripts/ZeroClipboard/ZeroClipboard.swf" type="application/x-shockwave-flash" width="18" height="18" align="middle"><param name="src" value="http://static.blog.csdn.net/scripts/ZeroClipboard/ZeroClipboard.swf"><param name="loop" value="loop"><param name="menu" value="false"><param name="quality" value="best"><param name="allowscriptaccess" value="always"><param name="allowfullscreen" value="false"><param name="pluginspage" value="http://www.macromedia.com/go/getflashplayer"><param name="flashvars" value="id=5&amp;width=18&amp;height=18"><param name="wmode" value="transparent"></object></div>
+
+</div>
+
+</div>
+<ol class="dp-j" start="1">
+<li class="alt"><span><span class="keyword">if</span><span>(displaySaleStatus==</span><span class="number">0</span><span>&amp;&amp;displayBookStatus==</span><span class="number">0</span><span>&amp;&amp;displayNotBookStatus==</span><span class="number">0</span><span>)&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;((TableRowSorter)<span class="keyword">this</span><span>.table.getRowSorter()).setRowFilter(RowFilter.regexFilter(</span><span class="string">"什么都不显示哦"</span><span>,&nbsp;</span><span class="number">4</span><span>));&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span><span class="keyword">if</span><span>(displaySaleStatus==</span><span class="number">1</span><span>&amp;&amp;displayBookStatus==</span><span class="number">0</span><span>&amp;&amp;displayNotBookStatus==</span><span class="number">0</span><span>)&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;((TableRowSorter)<span class="keyword">this</span><span>.table.getRowSorter()).setRowFilter(RowFilter.regexFilter(</span><span class="string">"已售"</span><span>,&nbsp;</span><span class="number">4</span><span>));&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span><span class="keyword">else</span><span>&nbsp;</span><span class="keyword">if</span><span>(displaySaleStatus==</span><span class="number">0</span><span>&amp;&amp;displayBookStatus==</span><span class="number">1</span><span>&amp;&amp;displayNotBookStatus==</span><span class="number">0</span><span>)&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;((TableRowSorter)<span class="keyword">this</span><span>.table.getRowSorter()).setRowFilter(RowFilter.regexFilter(</span><span class="string">"预订"</span><span>,&nbsp;</span><span class="number">4</span><span>));&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span><span class="keyword">else</span><span>&nbsp;</span><span class="keyword">if</span><span>(displaySaleStatus==</span><span class="number">0</span><span>&amp;&amp;displayBookStatus==</span><span class="number">0</span><span>&amp;&amp;displayNotBookStatus==</span><span class="number">1</span><span>)&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;((TableRowSorter)<span class="keyword">this</span><span>.table.getRowSorter()).setRowFilter(RowFilter.regexFilter(</span><span class="string">"未订"</span><span>,&nbsp;</span><span class="number">4</span><span>));&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span><span class="keyword">else</span><span>&nbsp;</span><span class="keyword">if</span><span>(displaySaleStatus==</span><span class="number">1</span><span>&amp;&amp;displayBookStatus==</span><span class="number">1</span><span>&amp;&amp;displayNotBookStatus==</span><span class="number">0</span><span>)&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;((TableRowSorter)<span class="keyword">this</span><span>.table.getRowSorter()).setRowFilter(RowFilter.regexFilter(</span><span class="string">"已售|预订"</span><span>,&nbsp;</span><span class="number">4</span><span>));&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span><span class="keyword">else</span><span>&nbsp;</span><span class="keyword">if</span><span>(displaySaleStatus==</span><span class="number">0</span><span>&amp;&amp;displayBookStatus==</span><span class="number">1</span><span>&amp;&amp;displayNotBookStatus==</span><span class="number">1</span><span>)&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;((TableRowSorter)<span class="keyword">this</span><span>.table.getRowSorter()).setRowFilter(RowFilter.regexFilter(</span><span class="string">"预订|未订"</span><span>,&nbsp;</span><span class="number">4</span><span>));&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span><span class="keyword">else</span><span>&nbsp;</span><span class="keyword">if</span><span>(displaySaleStatus==</span><span class="number">1</span><span>&amp;&amp;displayBookStatus==</span><span class="number">0</span><span>&amp;&amp;displayNotBookStatus==</span><span class="number">1</span><span>)&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;((TableRowSorter)<span class="keyword">this</span><span>.table.getRowSorter()).setRowFilter(RowFilter.regexFilter(</span><span class="string">"已售|未订"</span><span>,&nbsp;</span><span class="number">4</span><span>));&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span><span class="keyword">else</span><span>&nbsp;</span><span class="keyword">if</span><span>(displaySaleStatus==</span><span class="number">1</span><span>&amp;&amp;displayBookStatus==</span><span class="number">1</span><span>&amp;&amp;displayNotBookStatus==</span><span class="number">1</span><span>)&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;((TableRowSorter)<span class="keyword">this</span><span>.table.getRowSorter()).setRowFilter(RowFilter.regexFilter(</span><span class="string">"已售|预订|未订"</span><span>,&nbsp;</span><span class="number">4</span><span>));</span><span class="comment">//全部显示，或setRowFilter(null)</span><span>&nbsp;&nbsp;</span></span></li>
+
+</ol></div>
+<p>
+<span>一下是地震发布系统中过滤第2列即震级列(字段为Float型)</span></p>
+<p>&nbsp;</p>
+<div class="dp-highlighter bg_java">
+<div class="bar">
+<div class="tools"><strong>[java]</strong>&nbsp;<a class="ViewSource" title="view plain" href="http://blog.csdn.net/b_h_l/article/details/7771944">view plain</a><a class="CopyToClipboard" title="copy" href="http://blog.csdn.net/b_h_l/article/details/7771944">copy</a>
+<div><object id="ZeroClipboardMovie_6" bgcolor="#ffffff" data="http://static.blog.csdn.net/scripts/ZeroClipboard/ZeroClipboard.swf" type="application/x-shockwave-flash" width="18" height="18" align="middle"><param name="src" value="http://static.blog.csdn.net/scripts/ZeroClipboard/ZeroClipboard.swf"><param name="loop" value="loop"><param name="menu" value="false"><param name="quality" value="best"><param name="allowscriptaccess" value="always"><param name="allowfullscreen" value="false"><param name="pluginspage" value="http://www.macromedia.com/go/getflashplayer"><param name="flashvars" value="id=6&amp;width=18&amp;height=18"><param name="wmode" value="transparent"></object></div>
+
+</div>
+
+</div>
+<ol class="dp-j" start="1">
+<li class="alt"><span><span class="comment">/**</span>&nbsp;</span></li>
+<li><span><span class="comment">&nbsp;*&nbsp;(大、中、小地震)显示按钮事件处理过程</span>&nbsp;</span></li>
+<li class="alt"><span><span class="comment">&nbsp;*&nbsp;*/</span><span>&nbsp;&nbsp;</span></span></li>
+<li><span><span class="annotation">@SuppressWarnings</span><span>(</span><span class="string">"unchecked"</span><span>)&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span><span class="keyword">private</span><span>&nbsp;</span><span class="keyword">void</span><span>&nbsp;showActionHandle(){&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">boolean</span><span>&nbsp;showBigEqStatus=showBigEqBut.isSelected();&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">boolean</span><span>&nbsp;showMiddleEqStatus=showMiddleEqBut.isSelected();&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">boolean</span><span>&nbsp;showSmallEqStatus=showSmallEqBut.isSelected();&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span><span>(showBigEqStatus==</span><span class="keyword">false</span><span>&amp;&amp;showMiddleEqStatus==</span><span class="keyword">false</span><span>&amp;&amp;showSmallEqStatus==</span><span class="keyword">false</span><span>)&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;((TableRowSorter)<span class="keyword">this</span><span>.getRowSorter()).setRowFilter(RowFilter.numberFilter(ComparisonType.AFTER,&nbsp;</span><span class="number">100</span><span>,</span><span class="number">2</span><span>));&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span><span>(showBigEqStatus==</span><span class="keyword">true</span><span>&amp;&amp;showMiddleEqStatus==</span><span class="keyword">false</span><span>&amp;&amp;showSmallEqStatus==</span><span class="keyword">false</span><span>){&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;((TableRowSorter)<span class="keyword">this</span><span>.getRowSorter()).setRowFilter(RowFilter.numberFilter(ComparisonType.AFTER,TableAttribute.BIG_EARTHQUAKE_THRESHOLD,</span><span class="number">2</span><span>));&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;&nbsp;</span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">else</span><span>&nbsp;</span><span class="keyword">if</span><span>(showBigEqStatus==</span><span class="keyword">false</span><span>&amp;&amp;showMiddleEqStatus==</span><span class="keyword">true</span><span>&amp;&amp;showSmallEqStatus==</span><span class="keyword">false</span><span>){&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;List&lt;RowFilter&lt;Object,Object&gt;&gt;&nbsp;filters&nbsp;=&nbsp;<span class="keyword">new</span><span>&nbsp;ArrayList&lt;RowFilter&lt;Object,Object&gt;&gt;(</span><span class="number">2</span><span>);&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;filters.add(RowFilter.numberFilter(ComparisonType.AFTER,TableAttribute.MIDDLE_EARTHQUAKE_THRESHOLD,<span class="number">2</span><span>));&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;filters.add(RowFilter.numberFilter(ComparisonType.BEFORE,TableAttribute.BIG_EARTHQUAKE_THRESHOLD,<span class="number">2</span><span>));&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RowFilter&lt;Object,Object&gt;&nbsp;fooBarFilter&nbsp;=&nbsp;RowFilter.andFilter(filters);&nbsp;&nbsp;</span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;((TableRowSorter)<span class="keyword">this</span><span>.getRowSorter()).setRowFilter(fooBarFilter);&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;&nbsp;</span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">else</span><span>&nbsp;</span><span class="keyword">if</span><span>(showBigEqStatus==</span><span class="keyword">false</span><span>&amp;&amp;showMiddleEqStatus==</span><span class="keyword">false</span><span>&amp;&amp;showSmallEqStatus==</span><span class="keyword">true</span><span>){&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;((TableRowSorter)<span class="keyword">this</span><span>.getRowSorter()).setRowFilter(RowFilter.numberFilter(ComparisonType.BEFORE,TableAttribute.MIDDLE_EARTHQUAKE_THRESHOLD,</span><span class="number">2</span><span>));&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;&nbsp;</span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">else</span><span>&nbsp;</span><span class="keyword">if</span><span>(showBigEqStatus==</span><span class="keyword">true</span><span>&amp;&amp;showMiddleEqStatus==</span><span class="keyword">true</span><span>&amp;&amp;showSmallEqStatus==</span><span class="keyword">false</span><span>){&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;((TableRowSorter)<span class="keyword">this</span><span>.getRowSorter()).setRowFilter(RowFilter.numberFilter(ComparisonType.AFTER,TableAttribute.MIDDLE_EARTHQUAKE_THRESHOLD,</span><span class="number">2</span><span>));&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;&nbsp;</span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">else</span><span>&nbsp;</span><span class="keyword">if</span><span>(showBigEqStatus==</span><span class="keyword">false</span><span>&amp;&amp;showMiddleEqStatus==</span><span class="keyword">true</span><span>&amp;&amp;showSmallEqStatus==</span><span class="keyword">true</span><span>){&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;((TableRowSorter)<span class="keyword">this</span><span>.getRowSorter()).setRowFilter(RowFilter.numberFilter(ComparisonType.BEFORE,TableAttribute.BIG_EARTHQUAKE_THRESHOLD,</span><span class="number">2</span><span>));&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;&nbsp;</span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">else</span><span>&nbsp;</span><span class="keyword">if</span><span>(showBigEqStatus==</span><span class="keyword">true</span><span>&amp;&amp;showMiddleEqStatus==</span><span class="keyword">false</span><span>&amp;&amp;showSmallEqStatus==</span><span class="keyword">true</span><span>){&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;List&lt;RowFilter&lt;Object,Object&gt;&gt;&nbsp;filters&nbsp;=&nbsp;<span class="keyword">new</span><span>&nbsp;ArrayList&lt;RowFilter&lt;Object,Object&gt;&gt;(</span><span class="number">2</span><span>);&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;filters.add(RowFilter.numberFilter(ComparisonType.AFTER,TableAttribute.BIG_EARTHQUAKE_THRESHOLD,<span class="number">2</span><span>));&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;filters.add(RowFilter.numberFilter(ComparisonType.BEFORE,TableAttribute.MIDDLE_EARTHQUAKE_THRESHOLD,<span class="number">2</span><span>));&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RowFilter&lt;Object,Object&gt;&nbsp;fooBarFilter&nbsp;=&nbsp;RowFilter.orFilter(filters);&nbsp;&nbsp;</span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;((TableRowSorter)<span class="keyword">this</span><span>.getRowSorter()).setRowFilter(fooBarFilter);&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;&nbsp;</span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">else</span><span>&nbsp;</span><span class="keyword">if</span><span>(showBigEqStatus==</span><span class="keyword">true</span><span>&amp;&amp;showMiddleEqStatus==</span><span class="keyword">true</span><span>&amp;&amp;showSmallEqStatus==</span><span class="keyword">true</span><span>){&nbsp;&nbsp;</span></span></li>
+<li><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;((TableRowSorter)<span class="keyword">this</span><span>.getRowSorter()).setRowFilter(RowFilter.numberFilter(ComparisonType.AFTER,&nbsp;</span><span class="number">0</span><span>,</span><span class="number">2</span><span>));&nbsp;&nbsp;</span></span></li>
+<li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;&nbsp;</span></li>
+<li><span>}&nbsp;&nbsp;</span></li>
+
+</ol></div>
+<p>
+<br><br><br></p>
+<p>&nbsp;</p>
+<p><span>补充：</span>将表格视图中的行号映射到模型中对应的行号，才能正确地得到行的内容，尤其是自动排序后，视图中的行号与表格模型
+中的行号不一致,TableModel中的方法getValueAt(row,column)中的row指模型中的row,而通过
+table.getSelectedRow()或者事件处理中通过table.rowAtPoint(e.getPoint())得到row指视图中的
+row,因此必须将视图中的row转化为model中的row:</p>
+<p>int &nbsp;view_row &nbsp; &nbsp;= table.rowAtPoint(e.getPoint()); //获得视图中的行索引<br>&nbsp;int &nbsp;view_col &nbsp; &nbsp; = table.columnAtPoint(e.getPoint()); //获得视图中的列索引<br>&nbsp;int &nbsp;model_row= table.convertRowIndexToModel(row);//将视图中的行索引转化为数据模型中的行索引<br>&nbsp;int &nbsp;model_col = table.convertColumnIndexToModel(col);//将视图中的列索引转化为数据模型中的列索引</p>
+<p>本文转自:http://blog.csdn.net/b_h_l/article/details/7771944</p></div><div id="MySignature"></div>
+<div class="clear"></div>
+<div id="blog_post_info_block">
+<div id="BlogPostCategory">分类: <a href="https://www.cnblogs.com/tianyaxue/category/490415.html" target="_blank">java</a></div>
+<div id="EntryTag">标签: <a href="https://www.cnblogs.com/tianyaxue/tag/java/">java</a>, <a href="https://www.cnblogs.com/tianyaxue/tag/JTable/">JTable</a></div>
+<div id="blog_post_info"><div id="green_channel">
+        <a href="javascript:void(0);" id="green_channel_digg" onclick="DiggIt(3494291,cb_blogId,1);green_channel_success(this,'谢谢推荐！');">好文要顶</a>
+            <a id="green_channel_follow" onclick="follow('75d2e407-2596-e211-9010-c3d7423e3b07');" href="javascript:void(0);">关注我</a>
+    <a id="green_channel_favorite" onclick="AddToWz(cb_entryId);return false;" href="javascript:void(0);">收藏该文</a>
+    <a id="green_channel_weibo" href="javascript:void(0);" title="分享至新浪微博" onclick="ShareToTsina()"><img src="%E3%80%90%E8%BD%AC%E3%80%91java%20JTable%E6%8E%92%E5%BA%8F%E5%92%8C%E8%BF%87%E6%BB%A4%20-%20%E5%A4%A9%E6%B6%AF%E9%9B%AA%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/icon_weibo_24.png" alt=""></a>
+    <a id="green_channel_wechat" href="javascript:void(0);" title="分享至微信" onclick="shareOnWechat()"><img src="%E3%80%90%E8%BD%AC%E3%80%91java%20JTable%E6%8E%92%E5%BA%8F%E5%92%8C%E8%BF%87%E6%BB%A4%20-%20%E5%A4%A9%E6%B6%AF%E9%9B%AA%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/wechat.png" alt=""></a>
+</div>
+<div id="author_profile">
+    <div id="author_profile_info" class="author_profile_info">
+            <a href="https://home.cnblogs.com/u/tianyaxue/" target="_blank"><img src="%E3%80%90%E8%BD%AC%E3%80%91java%20JTable%E6%8E%92%E5%BA%8F%E5%92%8C%E8%BF%87%E6%BB%A4%20-%20%E5%A4%A9%E6%B6%AF%E9%9B%AA%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/sample_face.gif" class="author_avatar" alt=""></a>
+        <div id="author_profile_detail" class="author_profile_info">
+            <a href="https://home.cnblogs.com/u/tianyaxue/">天涯雪</a><br>
+            <a href="https://home.cnblogs.com/u/tianyaxue/followees">关注 - 5</a><br>
+            <a href="https://home.cnblogs.com/u/tianyaxue/followers">粉丝 - 2</a>
+        </div>
+    </div>
+    <div class="clear"></div>
+    <div id="author_profile_honor"></div>
+    <div id="author_profile_follow">
+                <a href="javascript:void(0);" onclick="follow('75d2e407-2596-e211-9010-c3d7423e3b07');return false;">+加关注</a>
+    </div>
+</div>
+<div id="div_digg">
+    <div class="diggit" onclick="votePost(3494291,'Digg')">
+        <span class="diggnum" id="digg_count">1</span>
+    </div>
+    <div class="buryit" onclick="votePost(3494291,'Bury')">
+        <span class="burynum" id="bury_count">0</span>
+    </div>
+    <div class="clear"></div>
+    <div class="diggword" id="digg_tips">
+    </div>
+</div>
+<script type="text/javascript">
+    currentDiggType = 0;
+</script></div>
+<div class="clear"></div>
+<div id="post_next_prev"><a href="https://www.cnblogs.com/tianyaxue/p/3457751.html" class="p_n_p_prefix">« </a> 上一篇：<a href="https://www.cnblogs.com/tianyaxue/p/3457751.html" title="发布于2013-12-04 15:58">【转】JTree调用UpdateUI()抛空指针</a><br><a href="https://www.cnblogs.com/tianyaxue/p/3548689.html" class="p_n_p_prefix">» </a> 下一篇：<a href="https://www.cnblogs.com/tianyaxue/p/3548689.html" title="发布于2014-02-13 21:20">Linux常用命令</a><br></div>
+</div>
+
+
+		</div>
+		<div class="postDesc">posted @ <span id="post-date">2013-12-27 15:45</span> <a href="https://www.cnblogs.com/tianyaxue/">天涯雪</a> 阅读(<span id="post_view_count">3735</span>) 评论(<span id="post_comment_count">0</span>)  <a href="https://i.cnblogs.com/EditPosts.aspx?postid=3494291" rel="nofollow">编辑</a> <a href="#" onclick="AddToWz(3494291);return false;">收藏</a></div>
+	</div>
+	<script type="text/javascript">var allowComments=true,cb_blogId=154826,cb_entryId=3494291,cb_blogApp=currentBlogApp,cb_blogUserGuid='75d2e407-2596-e211-9010-c3d7423e3b07',cb_entryCreatedDate='2013/12/27 15:45:00';loadViewCount(cb_entryId);var cb_postType=1;var isMarkdown=false;</script>
+	
+</div><!--end: topics 文章、评论容器-->
+</div><a name="!comments"></a><div id="blog-comments-placeholder"></div><script type="text/javascript">var commentManager = new blogCommentManager();commentManager.renderComments(0);</script>
+<div id="comment_form" class="commentform">
+<a name="commentform"></a>
+<div id="divCommentShow"></div>
+<div id="comment_nav"><span id="span_refresh_tips"></span><a href="javascript:void(0);" onclick="return RefreshCommentList();" id="lnk_RefreshComments" runat="server" clientidmode="Static">刷新评论</a><a href="#" onclick="return RefreshPage();">刷新页面</a><a href="#top">返回顶部</a></div>
+<div id="comment_form_container"><script type="text/javascript" src="%E3%80%90%E8%BD%AC%E3%80%91java%20JTable%E6%8E%92%E5%BA%8F%E5%92%8C%E8%BF%87%E6%BB%A4%20-%20%E5%A4%A9%E6%B6%AF%E9%9B%AA%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/mention.js"></script>
+<div id="commentform_title">发表评论</div>
+<span id="tip_comment" style="color:Red"></span>
+<p>
+昵称：<input type="text" id="tbCommentAuthor" class="author" disabled="disabled" size="50" value="流年飞雨">
+</p>
+<div class="commentbox_main">
+<div class="commentbox_title">
+<div class="commentbox_title_left">评论内容：</div>
+<div class="commentbox_title_right">
+<img id="ubb_quote" class="comment_icon" src="%E3%80%90%E8%BD%AC%E3%80%91java%20JTable%E6%8E%92%E5%BA%8F%E5%92%8C%E8%BF%87%E6%BB%A4%20-%20%E5%A4%A9%E6%B6%AF%E9%9B%AA%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/quote.gif" alt="引用" title="添加引用" onclick="insertUBB('tbCommentBody','quote')">
+<img id="ubb_bold" class="comment_icon" src="%E3%80%90%E8%BD%AC%E3%80%91java%20JTable%E6%8E%92%E5%BA%8F%E5%92%8C%E8%BF%87%E6%BB%A4%20-%20%E5%A4%A9%E6%B6%AF%E9%9B%AA%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/b.png" alt="粗体" title="添加粗体" onclick="insertUBB('tbCommentBody','b')">
+<img id="ubb_url" class="comment_icon" src="%E3%80%90%E8%BD%AC%E3%80%91java%20JTable%E6%8E%92%E5%BA%8F%E5%92%8C%E8%BF%87%E6%BB%A4%20-%20%E5%A4%A9%E6%B6%AF%E9%9B%AA%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/lk.png" alt="链接" title="添加链接" onclick="insertUbbUrl('tbCommentBody')">
+<img id="ubb_indent" class="comment_icon" src="%E3%80%90%E8%BD%AC%E3%80%91java%20JTable%E6%8E%92%E5%BA%8F%E5%92%8C%E8%BF%87%E6%BB%A4%20-%20%E5%A4%A9%E6%B6%AF%E9%9B%AA%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/indent.png" alt="缩进" title="添加首行缩进" onclick="insertIndent('tbCommentBody')">
+<img id="ubb_code" class="comment_icon" src="%E3%80%90%E8%BD%AC%E3%80%91java%20JTable%E6%8E%92%E5%BA%8F%E5%92%8C%E8%BF%87%E6%BB%A4%20-%20%E5%A4%A9%E6%B6%AF%E9%9B%AA%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/InsertCode.gif" alt="代码" title="添加代码" onclick="insertUbbCode()">
+<img id="ubb_img" class="comment_icon" src="%E3%80%90%E8%BD%AC%E3%80%91java%20JTable%E6%8E%92%E5%BA%8F%E5%92%8C%E8%BF%87%E6%BB%A4%20-%20%E5%A4%A9%E6%B6%AF%E9%9B%AA%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/img.gif" alt="图片" title="上传图片" onclick="OpenImageUploadWindow();">
+</div>
+</div>
+<div class="clear"></div>
+<textarea id="tbCommentBody" class="comment_textarea"></textarea>
+</div>
+<p id="commentbox_opt">
+<input id="btn_comment_submit" type="button" class="comment_btn" value="提交评论">
+<span id="span_comment_canceledit" style="display:none"><a href="javascript:void(0);" onclick="return CancelCommentEdit()">不改了</a></span>
+<a href="javascript:void(0);" onclick="return logout();">退出</a>
+        <a id="commentbox_opt_sub" href="javascript:void(0);" title="订阅后有新评论时会邮件通知您" onclick="commentManager.Subscribe()">订阅评论</a>
+</p>
+<div id="tip_comment2" style="color:Red"></div>
+<p>
+[Ctrl+Enter快捷键提交]
+</p>
+<div style="display:none">
+<span id="comment_edit_id"></span><span id="span_parentcomment_id"></span>
+<span id="span_parent_id"></span>
+<span id="span_comment_replyto"></span>
+<span id="span_comment_posted"></span>
+</div>
+</div>
+<div class="ad_text_commentbox" id="ad_text_under_commentbox"></div>
+<div id="ad_t2"><a href="http://www.ucancode.com/index.htm" target="_blank" onclick="ga('send', 'event', 'Link', 'click', 'T2-工控')">【推荐】超50万C++/C#源码: 大型实时仿真组态图形源码</a><br><a href="https://www.grapecity.com.cn/developer/spreadjs?utm_source=cnblogs&amp;utm_medium=blogpage&amp;utm_term=bottom&amp;utm_content=SpreadJS&amp;utm_campaign=community" target="_blank" onclick="ga('send', 'event', 'Link', 'click', 'T2-SpreadJS')">【前端】SpreadJS表格控件，可嵌入系统开发的在线Excel</a><br><a href="https://q.cnblogs.com/" target="_blank" onclick="ga('send', 'event', 'Link', 'click', 'T2-博问')">【推荐】程序员问答平台，解决您开发中遇到的技术难题</a><br></div>
+<div id="opt_under_post"></div>
+<script async="async" src="%E3%80%90%E8%BD%AC%E3%80%91java%20JTable%E6%8E%92%E5%BA%8F%E5%92%8C%E8%BF%87%E6%BB%A4%20-%20%E5%A4%A9%E6%B6%AF%E9%9B%AA%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/gpt.js"></script>
+<script>
+  var googletag = googletag || {};
+  googletag.cmd = googletag.cmd || [];
+</script>
+<script>
+  googletag.cmd.push(function() {
+        googletag.defineSlot('/1090369/C1', [300, 250], 'div-gpt-ad-1546353474406-0').addService(googletag.pubads());
+        googletag.defineSlot('/1090369/C2', [468, 60], 'div-gpt-ad-1539008685004-0').addService(googletag.pubads());
+        googletag.pubads().enableSingleRequest();
+        googletag.enableServices();
+  });
+</script>
+<div id="cnblogs_c1" class="c_ad_block">
+    <div id="div-gpt-ad-1546353474406-0" style="height:250px; width:300px;" data-google-query-id="CJ79vtPm2OICFUtevQodGjoJYA"><div id="google_ads_iframe_/1090369/C1_0__container__" style="border: 0pt none;"><iframe id="google_ads_iframe_/1090369/C1_0" title="3rd party ad content" name="google_ads_iframe_/1090369/C1_0" scrolling="no" marginwidth="0" marginheight="0" style="border: 0px none; vertical-align: bottom;" srcdoc="" data-google-container-id="1" data-load-complete="true" width="300" height="250" frameborder="0"></iframe></div></div>
+</div>
+<div id="under_post_news"><div class="recomm-block"><b>相关博文：</b><br>·  <a href="https://www.cnblogs.com/sandaoliu/p/4216572.html" target="_blank" onclick="clickRecomItmem(4216572)">Java Swing JTable API</a><br>·  <a href="https://www.cnblogs.com/zhangxinhua/p/8319208.html" target="_blank" onclick="clickRecomItmem(8319208)">java swing 开发  -JTable</a><br>·  <a href="https://www.cnblogs.com/877599949yan/p/5284994.html" target="_blank" onclick="clickRecomItmem(5284994)">过滤和排序·下</a><br>·  <a href="https://www.cnblogs.com/877599949yan/p/5284988.html" target="_blank" onclick="clickRecomItmem(5284988)">过滤和排序·上</a><br>·  <a href="https://www.cnblogs.com/anzhi/p/7515661.html" target="_blank" onclick="clickRecomItmem(7515661)">Oracle过滤和排序</a><br></div></div>
+<div id="cnblogs_c2" class="c_ad_block">
+    <div id="div-gpt-ad-1539008685004-0" style="height:60px; width:468px;" data-google-query-id="COqPwNPm2OICFUtevQodGjoJYA"><div id="google_ads_iframe_/1090369/C2_0__container__" style="border: 0pt none;"><iframe id="google_ads_iframe_/1090369/C2_0" title="3rd party ad content" name="google_ads_iframe_/1090369/C2_0" scrolling="no" marginwidth="0" marginheight="0" style="border: 0px none; vertical-align: bottom;" srcdoc="" data-google-container-id="2" data-load-complete="true" width="468" height="60" frameborder="0"></iframe></div></div>
+</div>
+<div id="under_post_kb"><div class="itnews c_ad_block"><b>最新新闻</b>：<br> ·  <a href="https://news.cnblogs.com/n/626550/" target="_blank">圣塔菲最新群体智能文集——液态大脑与固态大脑</a><br> ·  <a href="https://news.cnblogs.com/n/626549/" target="_blank">微软股价飙升创历史最高：市值超1万亿美元</a><br> ·  <a href="https://news.cnblogs.com/n/626548/" target="_blank">Google 的云游戏服务价格不菲</a><br> ·  <a href="https://news.cnblogs.com/n/626547/" target="_blank">巴西副总统：5G建设不会拒绝华为供货</a><br> ·  <a href="https://news.cnblogs.com/n/626546/" target="_blank">Uber CEO重组管理层扩大权力 COO和CMO离职</a><br>» <a href="http://news.cnblogs.com/" title="IT新闻" target="_blank">更多新闻...</a></div></div>
+<div id="HistoryToday" class="c_ad_block"></div>
+<script type="text/javascript">
+ if(enablePostBottom()) {
+    codeHighlight();
+    fixPostBody();
+    setTimeout(function () { incrementViewCount(cb_entryId); }, 50);
+    deliverT2();
+    deliverC1();
+    deliverC2();    
+    loadNewsAndKb();
+    loadBlogSignature();
+    LoadPostInfoBlock(cb_blogId, cb_entryId, cb_blogApp, cb_blogUserGuid);
+    GetPrevNextPost(cb_entryId, cb_blogId, cb_entryCreatedDate, cb_postType);
+    loadOptUnderPost();
+    GetHistoryToday(cb_blogId, cb_blogApp, cb_entryCreatedDate);  
+}
+</script>
+</div>
+
+    
+	</div><!--end: forFlow -->
+	</div><!--end: mainContent 主体内容容器-->
+
+	<div id="sideBar">
+		<div id="sideBarMain">
+			
+<!--done-->
+<div class="newsItem">
+<h3 class="catListTitle">公告</h3>
+	<div id="blog-news"><div id="profile_block">昵称：<a href="https://home.cnblogs.com/u/tianyaxue/">天涯雪</a><br>园龄：<a href="https://home.cnblogs.com/u/tianyaxue/" title="入园时间：2013-03-26">6年2个月</a><br>粉丝：<a href="https://home.cnblogs.com/u/tianyaxue/followers/">2</a><br>关注：<a href="https://home.cnblogs.com/u/tianyaxue/followees/">5</a><div id="p_b_follow"><a href="javascript:void(0);" onclick="follow('75d2e407-2596-e211-9010-c3d7423e3b07')">+加关注</a></div><script>getFollowStatus('75d2e407-2596-e211-9010-c3d7423e3b07')</script></div></div><script type="text/javascript">loadBlogNews();</script>
+</div>
+
+			<div id="calendar"><div id="blog-calendar" style=""><table id="blogCalendar" class="Cal" title="Calendar" cellspacing="0" cellpadding="0">
+	<tbody><tr><td colspan="7"><table class="CalTitle" cellspacing="0">
+		<tbody><tr><td class="CalNextPrev"><a href="javascript:void(0);" onclick="loadBlogCalendar('2019/05/01');return false;">&lt;</a></td><td align="center">2019年6月</td><td class="CalNextPrev" align="right"><a href="javascript:void(0);" onclick="loadBlogCalendar('2019/07/01');return false;">&gt;</a></td></tr>
+	</tbody></table></td></tr><tr><th class="CalDayHeader" abbr="日" scope="col" align="center">日</th><th class="CalDayHeader" abbr="一" scope="col" align="center">一</th><th class="CalDayHeader" abbr="二" scope="col" align="center">二</th><th class="CalDayHeader" abbr="三" scope="col" align="center">三</th><th class="CalDayHeader" abbr="四" scope="col" align="center">四</th><th class="CalDayHeader" abbr="五" scope="col" align="center">五</th><th class="CalDayHeader" abbr="六" scope="col" align="center">六</th></tr><tr><td class="CalOtherMonthDay" align="center">26</td><td class="CalOtherMonthDay" align="center">27</td><td class="CalOtherMonthDay" align="center">28</td><td class="CalOtherMonthDay" align="center">29</td><td class="CalOtherMonthDay" align="center">30</td><td class="CalOtherMonthDay" align="center">31</td><td class="CalWeekendDay" align="center">1</td></tr><tr><td class="CalWeekendDay" align="center">2</td><td align="center">3</td><td align="center">4</td><td align="center">5</td><td align="center">6</td><td align="center">7</td><td class="CalTodayDay" align="center">8</td></tr><tr><td class="CalWeekendDay" align="center">9</td><td align="center">10</td><td align="center">11</td><td align="center">12</td><td align="center">13</td><td align="center">14</td><td class="CalWeekendDay" align="center">15</td></tr><tr><td class="CalWeekendDay" align="center">16</td><td align="center">17</td><td align="center">18</td><td align="center">19</td><td align="center">20</td><td align="center">21</td><td class="CalWeekendDay" align="center">22</td></tr><tr><td class="CalWeekendDay" align="center">23</td><td align="center">24</td><td align="center">25</td><td align="center">26</td><td align="center">27</td><td align="center">28</td><td class="CalWeekendDay" align="center">29</td></tr><tr><td class="CalWeekendDay" align="center">30</td><td class="CalOtherMonthDay" align="center">1</td><td class="CalOtherMonthDay" align="center">2</td><td class="CalOtherMonthDay" align="center">3</td><td class="CalOtherMonthDay" align="center">4</td><td class="CalOtherMonthDay" align="center">5</td><td class="CalOtherMonthDay" align="center">6</td></tr>
+</tbody></table></div><script type="text/javascript">loadBlogDefaultCalendar();</script></div>
+			
+			<div id="leftcontentcontainer">
+				<div id="blog-sidecolumn"><div id="sidebar_search" class="sidebar-block">
+<div id="sidebar_search" class="mySearch">
+<h3 class="catListTitle">搜索</h3>
+<div id="sidebar_search_box">
+<div id="widget_my_zzk" class="div_my_zzk"><input type="text" id="q" onkeydown="return zzk_go_enter(event);" class="input_my_zzk">&nbsp;<input onclick="zzk_go()" type="button" value="找找看" id="btnZzk" class="btn_my_zzk"></div>
+<div id="widget_my_google" class="div_my_zzk"><input type="text" name="google_q" id="google_q" onkeydown="return google_go_enter(event)" class="input_my_zzk">&nbsp;<input onclick="google_go()" type="button" value="谷歌搜索" class="btn_my_zzk"></div>
+</div>
+</div>
+
+</div><div id="sidebar_shortcut" class="sidebar-block">
+<div class="catListLink">
+<h3 class="catListTitle">常用链接</h3>
+<ul>
+<li><a href="https://www.cnblogs.com/tianyaxue/p/" title="我的博客的随笔列表">我的随笔</a></li><li><a href="https://www.cnblogs.com/tianyaxue/MyComments.html" title="我发表过的评论列表">我的评论</a></li><li><a href="https://www.cnblogs.com/tianyaxue/OtherPosts.html" title="我评论过的随笔列表">我的参与</a></li><li><a href="https://www.cnblogs.com/tianyaxue/RecentComments.html" title="我的博客的评论列表">最新评论</a></li><li><a href="https://www.cnblogs.com/tianyaxue/tag/" title="我的博客的标签列表">我的标签</a></li>
+<li><a id="itemListLink" onclick="this.blur();WarpClass('itemListLink', 'itemListLin_con');return false;" href="#">更多链接</a></li>
+</ul>
+<div id="itemListLin_con" style="display:none;">
+<ul>
+
+</ul>
+</div>
+</div></div><div id="sidebar_toptags" class="sidebar-block">
+<div class="catListTag">
+<h3 class="catListTitle">我的标签</h3>
+<ul>
+<li><a href="https://www.cnblogs.com/tianyaxue/tag/java/">java</a>(17)</li><li><a href="https://www.cnblogs.com/tianyaxue/tag/Android/">Android</a>(15)</li><li><a href="https://www.cnblogs.com/tianyaxue/tag/linux/">linux</a>(3)</li><li><a href="https://www.cnblogs.com/tianyaxue/tag/Handler/">Handler</a>(2)</li><li><a href="https://www.cnblogs.com/tianyaxue/tag/http/">http</a>(2)</li><li><a href="https://www.cnblogs.com/tianyaxue/tag/jython/">jython</a>(2)</li><li><a href="https://www.cnblogs.com/tianyaxue/tag/apache/">apache</a>(2)</li><li><a href="https://www.cnblogs.com/tianyaxue/tag/tomcat/">tomcat</a>(2)</li><li><a href="https://www.cnblogs.com/tianyaxue/tag/Service/">Service</a>(2)</li><li><a href="https://www.cnblogs.com/tianyaxue/tag/%E5%86%85%E5%AD%98%E6%9C%BA%E5%88%B6/">内存机制</a>(2)</li><li><a href="https://www.cnblogs.com/tianyaxue/tag/">更多</a></li>
+</ul>
+</div></div><div id="sidebar_categories">
+<div class="catListPostCategory">
+<h3 class="catListTitle">随笔分类</h3>
+
+<ul>
+
+<li><a id="CatList_LinkList_0_Link_0" href="https://www.cnblogs.com/tianyaxue/category/490416.html">android(15)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_1" href="https://www.cnblogs.com/tianyaxue/category/490417.html">c/c++</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_2" href="https://www.cnblogs.com/tianyaxue/category/490415.html">java(24)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_3" href="https://www.cnblogs.com/tianyaxue/category/590764.html">Linux(7)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_4" href="https://www.cnblogs.com/tianyaxue/category/490418.html">随笔</a> </li>
+
+</ul>
+
+</div>
+
+<div class="catListPostArchive">
+<h3 class="catListTitle">随笔档案</h3>
+
+<ul>
+
+<li><a id="CatList_LinkList_1_Link_0" href="https://www.cnblogs.com/tianyaxue/archive/2015/11.html">2015年11月 (1)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_1" href="https://www.cnblogs.com/tianyaxue/archive/2015/07.html">2015年7月 (2)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_2" href="https://www.cnblogs.com/tianyaxue/archive/2014/11.html">2014年11月 (1)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_3" href="https://www.cnblogs.com/tianyaxue/archive/2014/10.html">2014年10月 (1)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_4" href="https://www.cnblogs.com/tianyaxue/archive/2014/08.html">2014年8月 (1)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_5" href="https://www.cnblogs.com/tianyaxue/archive/2014/07.html">2014年7月 (1)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_6" href="https://www.cnblogs.com/tianyaxue/archive/2014/06.html">2014年6月 (2)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_7" href="https://www.cnblogs.com/tianyaxue/archive/2014/05.html">2014年5月 (1)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_8" href="https://www.cnblogs.com/tianyaxue/archive/2014/04.html">2014年4月 (3)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_9" href="https://www.cnblogs.com/tianyaxue/archive/2014/02.html">2014年2月 (2)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_10" href="https://www.cnblogs.com/tianyaxue/archive/2013/12.html">2013年12月 (2)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_11" href="https://www.cnblogs.com/tianyaxue/archive/2013/11.html">2013年11月 (1)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_12" href="https://www.cnblogs.com/tianyaxue/archive/2013/08.html">2013年8月 (3)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_13" href="https://www.cnblogs.com/tianyaxue/archive/2013/07.html">2013年7月 (13)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_14" href="https://www.cnblogs.com/tianyaxue/archive/2013/06.html">2013年6月 (18)</a> </li>
+
+</ul>
+
+</div>
+
+</div><div id="sidebar_recentcomments" class="sidebar-block"><div id="recent_comments_wrap" style="display: none;">
+<div class="catListComment">
+<h3 class="catListTitle">最新评论</h3>
+
+	<div id="RecentCommentsBlock"></div>
+</div>
+</div></div><div id="sidebar_topviewedposts" class="sidebar-block"><div id="topview_posts_wrap">
+<div class="catListView">
+<h3 class="catListTitle">阅读排行榜</h3>
+	<div id="TopViewPostsBlock"><ul><li><a href="https://www.cnblogs.com/tianyaxue/p/3147471.html">1. JAVA 统计字符串中中文，英文，数字，空格的个数(14976)</a></li><li><a href="https://www.cnblogs.com/tianyaxue/p/3145045.html">2. Java Math的floor，round，ceil函数小结(7817)</a></li><li><a href="https://www.cnblogs.com/tianyaxue/p/3168619.html">3. Android获取本机IP地址(4164)</a></li><li><a href="https://www.cnblogs.com/tianyaxue/p/3494291.html">4. 【转】java JTable排序和过滤(3735)</a></li><li><a href="https://www.cnblogs.com/tianyaxue/p/3261059.html">5. 【转】介绍Jython，第一部分：轻轻松松写JAVA程序(3292)</a></li></ul></div>
+</div>
+</div></div><div id="sidebar_topcommentedposts" class="sidebar-block"><div id="topfeedback_posts_wrap" style="display: none;">
+<div class="catListFeedback">
+<h3 class="catListTitle">评论排行榜</h3>
+	<div id="TopFeedbackPostsBlock"></div>
+</div>
+</div></div><div id="sidebar_topdiggedposts" class="sidebar-block"><div id="topdigg_posts_wrap">
+<h3 class="catListTitle">推荐排行榜</h3>
+<div class="RecentComment">
+	<div id="TopDiggPostsBlock"><ul><li><a href="https://www.cnblogs.com/tianyaxue/p/3149070.html">1. java线程中的sleep和wait区别(1)</a></li><li><a href="https://www.cnblogs.com/tianyaxue/p/3494291.html">2. 【转】java JTable排序和过滤(1)</a></li></ul></div>
+</div></div></div></div><script type="text/javascript">loadBlogSideColumn();</script>
+			</div>
+			
+		</div><!--end: sideBarMain -->
+	</div><!--end: sideBar 侧边栏容器 -->
+	<div class="clear"></div>
+	</div><!--end: main -->
+	<div class="clear"></div>
+	<div id="footer">
+		
+<!--done-->
+Copyright ©2019 天涯雪
+	</div><!--end: footer -->
+</div><!--end: home 自定义的最大容器 -->
+
+
+
+</body></html>

@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="zh-cn"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="origin">
+    <title>JAVA NIO学习记录2-非阻塞式网络通信 - 流年飞雨 - 博客园</title>
+<meta property="og:description" content="一、阻塞与非阻塞 传统的IO 流都是阻塞式的。也就是说，当一个线程调用read() 或write() 时，该线程被阻塞，直到有一些数据被读取或写入，该线程在此期间不能执行其他任务。因此，在完成网络通信">
+    <link type="text/css" rel="stylesheet" href="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/blog-common.css">
+<link id="MainCss" type="text/css" rel="stylesheet" href="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/bundle-arrow.css">
+<link id="mobile-style" media="only screen and (max-width: 767px)" type="text/css" rel="stylesheet" href="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/bundle-arrow-mobile.css">
+    <link title="RSS" type="application/rss+xml" rel="alternate" href="https://www.cnblogs.com/liunianfeiyu/rss">
+    <link title="RSD" type="application/rsd+xml" rel="EditURI" href="https://www.cnblogs.com/liunianfeiyu/rsd.xml">
+<link type="application/wlwmanifest+xml" rel="wlwmanifest" href="https://www.cnblogs.com/liunianfeiyu/wlwmanifest.xml">
+    <script async="" src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/analytics.js"></script><script type="text/javascript" src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/encoder.js"></script><script src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/jquery-2.js"></script>
+    <script>var currentBlogId=364453;var currentBlogApp='liunianfeiyu',cb_enable_mathjax=true;var isLogined=true;</script>
+    <script type="text/x-mathjax-config;executed=true">
+    MathJax.Hub.Config({
+        tex2jax: { inlineMath: [['$','$'], ['\\(','\\)']], processClass: 'math', processEscapes: true },
+        TeX: { 
+            equationNumbers: { autoNumber: ['AMS'], useLabelIds: true }, 
+            extensions: ['extpfeil.js'],
+            Macros: {bm: "\\boldsymbol"}
+        },
+        'HTML-CSS': { linebreaks: { automatic: true } },
+        SVG: { linebreaks: { automatic: true } }
+        });
+    </script><script src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/MathJax.js"></script>
+<script src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/blog-common.js" type="text/javascript"></script>
+<style type="text/css">.MathJax_Hover_Frame {border-radius: .25em; -webkit-border-radius: .25em; -moz-border-radius: .25em; -khtml-border-radius: .25em; box-shadow: 0px 0px 15px #83A; -webkit-box-shadow: 0px 0px 15px #83A; -moz-box-shadow: 0px 0px 15px #83A; -khtml-box-shadow: 0px 0px 15px #83A; border: 1px solid #A6D ! important; display: inline-block; position: absolute}
+.MathJax_Menu_Button .MathJax_Hover_Arrow {position: absolute; cursor: pointer; display: inline-block; border: 2px solid #AAA; border-radius: 4px; -webkit-border-radius: 4px; -moz-border-radius: 4px; -khtml-border-radius: 4px; font-family: 'Courier New',Courier; font-size: 9px; color: #F0F0F0}
+.MathJax_Menu_Button .MathJax_Hover_Arrow span {display: block; background-color: #AAA; border: 1px solid; border-radius: 3px; line-height: 0; padding: 4px}
+.MathJax_Hover_Arrow:hover {color: white!important; border: 2px solid #CCC!important}
+.MathJax_Hover_Arrow:hover span {background-color: #CCC!important}
+</style><style type="text/css">#MathJax_About {position: fixed; left: 50%; width: auto; text-align: center; border: 3px outset; padding: 1em 2em; background-color: #DDDDDD; color: black; cursor: default; font-family: message-box; font-size: 120%; font-style: normal; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; border-radius: 15px; -webkit-border-radius: 15px; -moz-border-radius: 15px; -khtml-border-radius: 15px; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+#MathJax_About.MathJax_MousePost {outline: none}
+.MathJax_Menu {position: absolute; background-color: white; color: black; width: auto; padding: 2px; border: 1px solid #CCCCCC; margin: 0; cursor: default; font: menu; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+.MathJax_MenuItem {padding: 2px 2em; background: transparent}
+.MathJax_MenuArrow {position: absolute; right: .5em; padding-top: .25em; color: #666666; font-size: .75em}
+.MathJax_MenuActive .MathJax_MenuArrow {color: white}
+.MathJax_MenuArrow.RTL {left: .5em; right: auto}
+.MathJax_MenuCheck {position: absolute; left: .7em}
+.MathJax_MenuCheck.RTL {right: .7em; left: auto}
+.MathJax_MenuRadioCheck {position: absolute; left: 1em}
+.MathJax_MenuRadioCheck.RTL {right: 1em; left: auto}
+.MathJax_MenuLabel {padding: 2px 2em 4px 1.33em; font-style: italic}
+.MathJax_MenuRule {border-top: 1px solid #CCCCCC; margin: 4px 1px 0px}
+.MathJax_MenuDisabled {color: GrayText}
+.MathJax_MenuActive {background-color: Highlight; color: HighlightText}
+.MathJax_MenuDisabled:focus, .MathJax_MenuLabel:focus {background-color: #E8E8E8}
+.MathJax_ContextMenu:focus {outline: none}
+.MathJax_ContextMenu .MathJax_MenuItem:focus {outline: none}
+#MathJax_AboutClose {top: .2em; right: .2em}
+.MathJax_Menu .MathJax_MenuClose {top: -10px; left: -10px}
+.MathJax_MenuClose {position: absolute; cursor: pointer; display: inline-block; border: 2px solid #AAA; border-radius: 18px; -webkit-border-radius: 18px; -moz-border-radius: 18px; -khtml-border-radius: 18px; font-family: 'Courier New',Courier; font-size: 24px; color: #F0F0F0}
+.MathJax_MenuClose span {display: block; background-color: #AAA; border: 1.5px solid; border-radius: 18px; -webkit-border-radius: 18px; -moz-border-radius: 18px; -khtml-border-radius: 18px; line-height: 0; padding: 8px 0 6px}
+.MathJax_MenuClose:hover {color: white!important; border: 2px solid #CCC!important}
+.MathJax_MenuClose:hover span {background-color: #CCC!important}
+.MathJax_MenuClose:hover:focus {outline: none}
+</style><style type="text/css">.MathJax_Preview .MJXf-math {color: inherit!important}
+</style><style type="text/css">.MJX_Assistive_MathML {position: absolute!important; top: 0; left: 0; clip: rect(1px, 1px, 1px, 1px); padding: 1px 0 0 0!important; border: 0!important; height: 1px!important; width: 1px!important; overflow: hidden!important; display: block!important; -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none}
+.MJX_Assistive_MathML.MJX_Assistive_MathML_Block {width: 100%!important}
+</style><style type="text/css">#MathJax_Zoom {position: absolute; background-color: #F0F0F0; overflow: auto; display: block; z-index: 301; padding: .5em; border: 1px solid black; margin: 0; font-weight: normal; font-style: normal; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; -webkit-box-sizing: content-box; -moz-box-sizing: content-box; box-sizing: content-box; box-shadow: 5px 5px 15px #AAAAAA; -webkit-box-shadow: 5px 5px 15px #AAAAAA; -moz-box-shadow: 5px 5px 15px #AAAAAA; -khtml-box-shadow: 5px 5px 15px #AAAAAA; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+#MathJax_ZoomOverlay {position: absolute; left: 0; top: 0; z-index: 300; display: inline-block; width: 100%; height: 100%; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+#MathJax_ZoomFrame {position: relative; display: inline-block; height: 0; width: 0}
+#MathJax_ZoomEventTrap {position: absolute; left: 0; top: 0; z-index: 302; display: inline-block; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+</style><style type="text/css">.MathJax_Preview {color: #888}
+#MathJax_Message {position: fixed; left: 1px; bottom: 2px; background-color: #E6E6E6; border: 1px solid #959595; margin: 0px; padding: 2px 8px; z-index: 102; color: black; font-size: 80%; width: auto; white-space: nowrap}
+#MathJax_MSIE_Frame {position: absolute; top: 0; left: 0; width: 0px; z-index: 101; border: 0px; margin: 0px; padding: 0px}
+.MathJax_Error {color: #CC0000; font-style: italic}
+</style><style type="text/css">.MJXp-script {font-size: .8em}
+.MJXp-right {-webkit-transform-origin: right; -moz-transform-origin: right; -ms-transform-origin: right; -o-transform-origin: right; transform-origin: right}
+.MJXp-bold {font-weight: bold}
+.MJXp-italic {font-style: italic}
+.MJXp-scr {font-family: MathJax_Script,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-frak {font-family: MathJax_Fraktur,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-sf {font-family: MathJax_SansSerif,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-cal {font-family: MathJax_Caligraphic,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-mono {font-family: MathJax_Typewriter,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-largeop {font-size: 150%}
+.MJXp-largeop.MJXp-int {vertical-align: -.2em}
+.MJXp-math {display: inline-block; line-height: 1.2; text-indent: 0; font-family: 'Times New Roman',Times,STIXGeneral,serif; white-space: nowrap; border-collapse: collapse}
+.MJXp-display {display: block; text-align: center; margin: 1em 0}
+.MJXp-math span {display: inline-block}
+.MJXp-box {display: block!important; text-align: center}
+.MJXp-box:after {content: " "}
+.MJXp-rule {display: block!important; margin-top: .1em}
+.MJXp-char {display: block!important}
+.MJXp-mo {margin: 0 .15em}
+.MJXp-mfrac {margin: 0 .125em; vertical-align: .25em}
+.MJXp-denom {display: inline-table!important; width: 100%}
+.MJXp-denom > * {display: table-row!important}
+.MJXp-surd {vertical-align: top}
+.MJXp-surd > * {display: block!important}
+.MJXp-script-box > *  {display: table!important; height: 50%}
+.MJXp-script-box > * > * {display: table-cell!important; vertical-align: top}
+.MJXp-script-box > *:last-child > * {vertical-align: bottom}
+.MJXp-script-box > * > * > * {display: block!important}
+.MJXp-mphantom {visibility: hidden}
+.MJXp-munderover {display: inline-table!important}
+.MJXp-over {display: inline-block!important; text-align: center}
+.MJXp-over > * {display: block!important}
+.MJXp-munderover > * {display: table-row!important}
+.MJXp-mtable {vertical-align: .25em; margin: 0 .125em}
+.MJXp-mtable > * {display: inline-table!important; vertical-align: middle}
+.MJXp-mtr {display: table-row!important}
+.MJXp-mtd {display: table-cell!important; text-align: center; padding: .5em 0 0 .5em}
+.MJXp-mtr > .MJXp-mtd:first-child {padding-left: 0}
+.MJXp-mtr:first-child > .MJXp-mtd {padding-top: 0}
+.MJXp-mlabeledtr {display: table-row!important}
+.MJXp-mlabeledtr > .MJXp-mtd:first-child {padding-left: 0}
+.MJXp-mlabeledtr:first-child > .MJXp-mtd {padding-top: 0}
+.MJXp-merror {background-color: #FFFF88; color: #CC0000; border: 1px solid #CC0000; padding: 1px 3px; font-style: normal; font-size: 90%}
+.MJXp-scale0 {-webkit-transform: scaleX(.0); -moz-transform: scaleX(.0); -ms-transform: scaleX(.0); -o-transform: scaleX(.0); transform: scaleX(.0)}
+.MJXp-scale1 {-webkit-transform: scaleX(.1); -moz-transform: scaleX(.1); -ms-transform: scaleX(.1); -o-transform: scaleX(.1); transform: scaleX(.1)}
+.MJXp-scale2 {-webkit-transform: scaleX(.2); -moz-transform: scaleX(.2); -ms-transform: scaleX(.2); -o-transform: scaleX(.2); transform: scaleX(.2)}
+.MJXp-scale3 {-webkit-transform: scaleX(.3); -moz-transform: scaleX(.3); -ms-transform: scaleX(.3); -o-transform: scaleX(.3); transform: scaleX(.3)}
+.MJXp-scale4 {-webkit-transform: scaleX(.4); -moz-transform: scaleX(.4); -ms-transform: scaleX(.4); -o-transform: scaleX(.4); transform: scaleX(.4)}
+.MJXp-scale5 {-webkit-transform: scaleX(.5); -moz-transform: scaleX(.5); -ms-transform: scaleX(.5); -o-transform: scaleX(.5); transform: scaleX(.5)}
+.MJXp-scale6 {-webkit-transform: scaleX(.6); -moz-transform: scaleX(.6); -ms-transform: scaleX(.6); -o-transform: scaleX(.6); transform: scaleX(.6)}
+.MJXp-scale7 {-webkit-transform: scaleX(.7); -moz-transform: scaleX(.7); -ms-transform: scaleX(.7); -o-transform: scaleX(.7); transform: scaleX(.7)}
+.MJXp-scale8 {-webkit-transform: scaleX(.8); -moz-transform: scaleX(.8); -ms-transform: scaleX(.8); -o-transform: scaleX(.8); transform: scaleX(.8)}
+.MJXp-scale9 {-webkit-transform: scaleX(.9); -moz-transform: scaleX(.9); -ms-transform: scaleX(.9); -o-transform: scaleX(.9); transform: scaleX(.9)}
+.MathJax_PHTML .noError {vertical-align: ; font-size: 90%; text-align: left; color: black; padding: 1px 3px; border: 1px solid}
+</style></head>
+<body><div id="MathJax_Message" style="display: none;"></div>
+<a name="top"></a>
+
+
+<!--done-->
+<div id="header">
+	
+<!--done-->
+<div class="header">
+	<div class="headerText">
+		<a id="Header1_HeaderTitle" class="headermaintitle" href="https://www.cnblogs.com/liunianfeiyu/">流年飞雨</a><br>
+		人是很难改变的，当你看清自己，也许那就是一辈子的你；人是可以改变的，只是要加倍用力，直到不再认识自己。
+	</div>
+</div>
+
+</div>
+<div id="mylinks">
+<!--done-->
+<a id="blog_nav_sitehome" class="menu" href="https://www.cnblogs.com/">博客园</a>&nbsp;&nbsp;&nbsp;
+<a id="blog_nav_myhome" class="menu" href="https://www.cnblogs.com/liunianfeiyu/">首页</a>&nbsp;&nbsp;&nbsp;
+<a id="blog_nav_newpost" class="menu" rel="nofollow" href="https://i.cnblogs.com/EditPosts.aspx?opt=1">新随笔</a>&nbsp;&nbsp;&nbsp;
+<a id="blog_nav_contact" accesskey="9" class="menu" rel="nofollow" href="https://msg.cnblogs.com/send/%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8">联系</a>&nbsp;&nbsp;&nbsp;
+<a id="blog_nav_rss" class="menu" href="https://www.cnblogs.com/liunianfeiyu/rss">订阅</a><a id="blog_nav_rss_image" href="https://www.cnblogs.com/liunianfeiyu/rss"><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/xml.gif" alt="订阅"></a>&nbsp;&nbsp;&nbsp;
+<a id="blog_nav_admin" class="menu" rel="nofollow" href="https://i.cnblogs.com/">管理</a>
+</div>
+<div id="mytopmenu">
+	
+		<div id="blog_stats">
+<div class="blogStats">随笔 - 156&nbsp;
+文章 - 22&nbsp;评论 - 13&nbsp;trackbacks - 0
+</div></div>
+	
+</div>
+<div id="leftcontent">
+	
+		<div id="leftcontentcontainer">
+			<div id="blog-calendar" style=""><table id="blogCalendar" class="Cal" title="Calendar" cellspacing="0" cellpadding="0">
+	<tbody><tr><td colspan="7"><table class="CalTitle" cellspacing="0">
+		<tbody><tr><td class="CalNextPrev"><a href="javascript:void(0);" onclick="loadBlogCalendar('2019/03/01');return false;">&lt;</a></td><td align="center">2019年4月</td><td class="CalNextPrev" align="right"><a href="javascript:void(0);" onclick="loadBlogCalendar('2019/05/01');return false;">&gt;</a></td></tr>
+	</tbody></table></td></tr><tr><th class="CalDayHeader" abbr="日" scope="col" align="center">日</th><th class="CalDayHeader" abbr="一" scope="col" align="center">一</th><th class="CalDayHeader" abbr="二" scope="col" align="center">二</th><th class="CalDayHeader" abbr="三" scope="col" align="center">三</th><th class="CalDayHeader" abbr="四" scope="col" align="center">四</th><th class="CalDayHeader" abbr="五" scope="col" align="center">五</th><th class="CalDayHeader" abbr="六" scope="col" align="center">六</th></tr><tr><td class="CalOtherMonthDay" align="center">31</td><td align="center">1</td><td align="center">2</td><td align="center">3</td><td align="center"><a href="https://www.cnblogs.com/liunianfeiyu/archive/2019/04/04.html"><u>4</u></a></td><td class="CalTodayDay" align="center">5</td><td class="CalWeekendDay" align="center">6</td></tr><tr><td class="CalWeekendDay" align="center">7</td><td align="center">8</td><td align="center">9</td><td align="center">10</td><td align="center">11</td><td align="center">12</td><td class="CalWeekendDay" align="center">13</td></tr><tr><td class="CalWeekendDay" align="center">14</td><td align="center">15</td><td align="center">16</td><td align="center">17</td><td align="center">18</td><td align="center">19</td><td class="CalWeekendDay" align="center">20</td></tr><tr><td class="CalWeekendDay" align="center">21</td><td align="center">22</td><td align="center">23</td><td align="center">24</td><td align="center">25</td><td align="center">26</td><td class="CalWeekendDay" align="center">27</td></tr><tr><td class="CalWeekendDay" align="center">28</td><td align="center">29</td><td align="center">30</td><td class="CalOtherMonthDay" align="center">1</td><td class="CalOtherMonthDay" align="center">2</td><td class="CalOtherMonthDay" align="center">3</td><td class="CalOtherMonthDay" align="center">4</td></tr><tr><td class="CalOtherMonthDay" align="center">5</td><td class="CalOtherMonthDay" align="center">6</td><td class="CalOtherMonthDay" align="center">7</td><td class="CalOtherMonthDay" align="center">8</td><td class="CalOtherMonthDay" align="center">9</td><td class="CalOtherMonthDay" align="center">10</td><td class="CalOtherMonthDay" align="center">11</td></tr>
+</tbody></table></div><script type="text/javascript">loadBlogDefaultCalendar();</script><br>
+			
+<!--done-->
+<div class="newsItem">
+	<div id="blog-news"><div id="profile_block">昵称：<a href="https://home.cnblogs.com/u/liunianfeiyu/">流年飞雨</a><br>园龄：<a href="https://home.cnblogs.com/u/liunianfeiyu/" title="入园时间：2017-07-01">1年9个月</a><br>粉丝：<a href="https://home.cnblogs.com/u/liunianfeiyu/followers/">12</a><br>关注：<a href="https://home.cnblogs.com/u/liunianfeiyu/followees/">28</a><div id="p_b_follow"></div><script>getFollowStatus('f22ce207-f29f-4312-ffd1-08d49c352df2')</script></div></div><script type="text/javascript">loadBlogNews();</script>
+</div>
+
+			<div id="blog-sidecolumn"><div id="sidebar_search" class="sidebar-block">
+<div id="sidebar_search" class="mySearch">
+<h3 class="catListTitle">搜索</h3>
+<div id="sidebar_search_box">
+<div id="widget_my_zzk" class="div_my_zzk"><input type="text" id="q" onkeydown="return zzk_go_enter(event);" class="input_my_zzk">&nbsp;<input onclick="zzk_go()" type="button" value="找找看" id="btnZzk" class="btn_my_zzk"></div>
+
+</div>
+</div>
+
+</div><div id="sidebar_shortcut" class="sidebar-block">
+<h3 class="catListTitle">常用链接</h3>
+<ul>
+<li><a href="https://www.cnblogs.com/liunianfeiyu/p/" title="我的博客的随笔列表">我的随笔</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/MyComments.html" title="我发表过的评论列表">我的评论</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/OtherPosts.html" title="我评论过的随笔列表">我的参与</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/RecentComments.html" title="我的博客的评论列表">最新评论</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/tag/" title="我的博客的标签列表">我的标签</a></li>
+</ul>
+<div id="itemListLin_con" style="display:none;">
+
+</div></div><div id="sidebar_recentposts" class="sidebar-block">
+<h3 class="catListTitle">最新随笔</h3>
+<div class="RecentComment" id="RecentPosts">
+<ul style="word-break:break-all">
+<li><a href="https://www.cnblogs.com/liunianfeiyu/p/10652667.html">1. Servlet学习记录2</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/10630084.html">2. Servlet学习记录1</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/10572688.html">3. JS里的&lt;!-- //--&gt; 注释有什么作用</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/10469496.html">4. ArrayList的addAll方法</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/10357082.html">5. 尚硅谷springboot学习36-自定义starter</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/10357068.html">6. 尚硅谷springboot学习35-启动原理</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/10357046.html">7. 尚硅谷springboot学习34-整合SpringData JPA</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/10357012.html">8. 尚硅谷springboot学习33-整合mybatis</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/10357000.html">9. 尚硅谷springboot学习32-整合druid</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/10356974.html">10. 尚硅谷springboot学习31-jdbc数据连接</a></li>
+</ul>
+</div>
+</div><div id="sidebar_toptags" class="sidebar-block">
+<h3 class="catListTitle">我的标签</h3>
+<div id="MyTag">
+<ul>
+<li><a href="https://www.cnblogs.com/liunianfeiyu/tag/hibernate%20%E7%BB%A7%E6%89%BF/">hibernate 继承</a>(1)</li><li><a href="https://www.cnblogs.com/liunianfeiyu/tag/%E6%96%87%E5%8C%96%20%E4%BA%BA%E7%94%9F%20%E6%95%99%E8%82%B2%20%E4%BD%9B%E5%AD%A6/">文化 人生 教育 佛学</a>(1)</li>
+</ul>
+</div></div><div id="sidebar_myteams" class="sidebar-block"></div><div id="sidebar_categories">
+<!--done-->
+
+		<h1 class="catListTitle">随笔分类<span style="font-size:11px;font-weight:normal">(164)</span></h1>
+		
+				<ul class="catList">
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_0" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1433222.html">book：java web整合开发王者归来(9)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_1" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1027293.html">css</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_2" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1027296.html">database(1)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_3" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1027294.html">html5(1)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_4" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1027292.html">java(14)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_5" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1027297.html">javaweb(11)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_6" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1027295.html">js/jquery(3)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_7" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1222878.html">linux(1)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_8" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1339581.html">mongodb(14)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_9" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1369690.html">redis(12)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_10" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1395091.html">springboot(36)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_11" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1395041.html">springmvc(3)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_12" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1039161.html">struts2(1)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_13" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1395040.html">webservice(6)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_14" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1342623.html">xml(1)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_15" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1280792.html">软考(14)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_16" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1359466.html">设计模式(22)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_17" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1162395.html">生，活，生活(1)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_18" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1313699.html">算法(3)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_19" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1358929.html">小知识(6)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_20" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1027299.html">心晴 心阴 心雨 心雪(5)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_21" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1162389.html">最近阅读</a></li>
+			
+				</ul>
+			
+	
+		<h1 class="catListTitle">随笔档案<span style="font-size:11px;font-weight:normal">(156)</span></h1>
+		
+				<ul class="catList">
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_0" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2019/04.html">2019年4月 (1)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_1" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2019/03.html">2019年3月 (3)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_2" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2019/02.html">2019年2月 (37)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_3" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2019/01.html">2019年1月 (12)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_4" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2018/12.html">2018年12月 (44)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_5" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2018/11.html">2018年11月 (12)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_6" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2018/10.html">2018年10月 (6)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_7" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2018/08.html">2018年8月 (5)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_8" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2018/07.html">2018年7月 (1)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_9" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2018/06.html">2018年6月 (2)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_10" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2018/05.html">2018年5月 (1)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_11" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2018/04.html">2018年4月 (3)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_12" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2018/03.html">2018年3月 (3)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_13" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2018/02.html">2018年2月 (11)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_14" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2018/01.html">2018年1月 (1)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_15" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2017/12.html">2017年12月 (2)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_16" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2017/11.html">2017年11月 (2)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_17" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2017/09.html">2017年9月 (1)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_18" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2017/08.html">2017年8月 (8)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_19" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2017/07.html">2017年7月 (1)</a></li>
+			
+				</ul>
+			
+	
+		<h1 class="catListTitle">文章分类<span style="font-size:11px;font-weight:normal">(20)</span></h1>
+		
+				<ul class="catList">
+			
+				<li class="catListItem"> <a id="CatList_LinkList_2_Link_0" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1239668.html">工作学习(13)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_2_Link_1" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1162396.html">平凡的世界(7)</a></li>
+			
+				</ul>
+			
+	
+		<h1 class="catListTitle">文章档案<span style="font-size:11px;font-weight:normal">(22)</span></h1>
+		
+				<ul class="catList">
+			
+				<li class="catListItem"> <a id="CatList_LinkList_3_Link_0" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archives/2019/01.html" rel="nofollow">2019年1月 (5)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_3_Link_1" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archives/2018/12.html" rel="nofollow">2018年12月 (4)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_3_Link_2" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archives/2018/11.html" rel="nofollow">2018年11月 (1)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_3_Link_3" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archives/2018/10.html" rel="nofollow">2018年10月 (2)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_3_Link_4" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archives/2018/09.html" rel="nofollow">2018年9月 (1)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_3_Link_5" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archives/2018/07.html" rel="nofollow">2018年7月 (2)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_3_Link_6" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archives/2018/06.html" rel="nofollow">2018年6月 (5)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_3_Link_7" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archives/2018/02.html" rel="nofollow">2018年2月 (2)</a></li>
+			
+				</ul>
+			
+	
+		<h1 class="catListTitle">相册<span style="font-size:11px;font-weight:normal">(1)</span></h1>
+		
+				<ul class="catList">
+			
+				<li class="catListItem"> <a id="CatList_LinkList_4_Link_0" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/gallery/1158899.html" rel="nofollow">技术图片(1)</a></li>
+			
+				</ul>
+			
+	
+</div><div id="sidebar_scorerank" class="sidebar-block">
+<h3>积分与排名</h3>
+<ul>
+	<li>
+		积分 -
+		9057
+	</li><li>
+		排名 -
+		52199
+	</li>
+</ul>
+</div><div id="sidebar_recentcomments" class="sidebar-block"><div id="recent_comments_wrap">
+<h3 class="catListTitle">最新评论</h3>
+<div class="RecentComment" id="RecentComments">
+	<div id="RecentCommentsBlock"><ul>
+        <li class="recent_comment_title"><a href="https://www.cnblogs.com/liunianfeiyu/articles/9196931.html#4000441">1. Re:牛叔说电影-社会底层是怎样炼成的</a></li>
+        <li class="recent_comment_body">这次又被牛叔洗脑了，怎么谁都可以来给我洗脑</li>
+        <li class="recent_comment_author">--因情雨血</li>
+        <li class="recent_comment_title"><a href="https://www.cnblogs.com/liunianfeiyu/p/8495478.html#3914209">2. Re:深喉，强奸2-制服诱惑，活着，从你的全世界路过</a></li>
+        <li class="recent_comment_body">坚持10点前睡觉，从明天开始</li>
+        <li class="recent_comment_author">--一座城你说你不懂</li>
+        <li class="recent_comment_title"><a href="https://www.cnblogs.com/liunianfeiyu/p/7215346.html#3914172">3. Re:尚硅谷STRUTS2视频学习笔记</a></li>
+        <li class="recent_comment_body">@聊寂园我大学都没学啥东西，还搞得死去活来的...</li>
+        <li class="recent_comment_author">--一座城你说你不懂</li>
+        <li class="recent_comment_title"><a href="https://www.cnblogs.com/liunianfeiyu/p/7215346.html#3909037">4. Re:尚硅谷STRUTS2视频学习笔记</a></li>
+        <li class="recent_comment_body">@一座城你说你不懂我这是一起复习了，大三了，才想起开个博客积攒点知识...</li>
+        <li class="recent_comment_author">--聊寂园</li>
+        <li class="recent_comment_title"><a href="https://www.cnblogs.com/liunianfeiyu/p/7215346.html#3909017">5. Re:尚硅谷STRUTS2视频学习笔记</a></li>
+        <li class="recent_comment_body">@聊寂园看了你的博客，你c++，java一起学的呀，感觉怎么样...</li>
+        <li class="recent_comment_author">--一座城你说你不懂</li>
+</ul>
+</div>
+</div>
+</div></div><div id="sidebar_topviewedposts" class="sidebar-block"><div id="topview_posts_wrap">
+<h3 class="catListTitle">阅读排行榜</h3>
+<div class="RecentComment" id="TopViewPosts"> 
+	<div id="TopViewPostsBlock"><ul><li><a href="https://www.cnblogs.com/liunianfeiyu/p/7353064.html">1. ECLIPSE修改xml配置文件TOMCAT不生效的解决(2449)</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/7266466.html">2. Enum学习中的compareTo方法分析(990)</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/7215346.html">3. 尚硅谷STRUTS2视频学习笔记(770)</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/7868779.html">4. jdk5新特性(316)</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/8909869.html">5. XML学习记录1-复习SAX，DOM和JAXB(190)</a></li></ul></div>
+</div>
+</div></div><div id="sidebar_topcommentedposts" class="sidebar-block"><div id="topfeedback_posts_wrap">
+<h3 class="catListTitle">评论排行榜</h3>
+<div class="RecentComment" id="TopCommentsPosts">
+	<div id="TopFeedbackPostsBlock"><ul><li><a href="https://www.cnblogs.com/liunianfeiyu/p/7215346.html">1. 尚硅谷STRUTS2视频学习笔记(5)</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/8428520.html">2. JAVA WEB开发中的会话跟踪(1)</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/8428335.html">3. JAVA WEB开发中的资源国际化(1)</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/7281548.html">4. JSP学习记录(1)</a></li></ul></div>
+</div></div></div><div id="sidebar_topdiggedposts" class="sidebar-block"><div id="topdigg_posts_wrap">
+<h3 class="catListTitle">推荐排行榜</h3>
+<div class="RecentComment">
+	<div id="TopDiggPostsBlock"><ul><li><a href="https://www.cnblogs.com/liunianfeiyu/p/7215346.html">1. 尚硅谷STRUTS2视频学习笔记(1)</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/9748239.html">2. 有向无环带权图的最短路径及长度(1)</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/9747519.html">3. 拓扑排序获取所有可能序列JAVA实现(1)</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/9542780.html">4. 查询后经过后台处理的数据的分页显示(1)</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/9434051.html">5. 原生js实现三级复选框(1)</a></li></ul></div>
+</div></div></div></div><script type="text/javascript">loadBlogSideColumn();</script></div>		
+	
+</div>
+<div id="centercontent">
+	
+        <div id="post_detail">
+<!--done-->
+<div class="post">
+	<div class="postTitle">
+		<h1><a id="cb_post_title_url" class="postTitle2" href="https://www.cnblogs.com/liunianfeiyu/p/9031914.html">JAVA NIO学习记录2-非阻塞式网络通信</a></h1>
+	</div>
+	<div id="cnblogs_post_body" class="blogpost-body"><p>　　<span style="color: #008000;">一、阻塞与非阻塞</span></p>
+<p>　　传统的IO 流都是阻塞式的。也就是说，当一个线程调用read() 或write() 
+时，该线程被阻塞，直到有一些数据被读取或写入，该线程在此期间不能执行其他任务。因此，在完成网络通信进行IO 
+操作时，由于线程会阻塞，所以服务器端必须为每个客户端都提供一个独立的线程进行处理，当服务器端需要处理大量客户端时，性能急剧下降。</p>
+<p>　　Java NIO 是非阻塞模式的。当线程从某通道进行读写数据时，若没有数据可用时，该线程可以进行其他任务。线程通常将非阻塞IO 
+的空闲时间用于在其他通道上执行IO 操作，所以单独的线程可以管理多个输入和输出通道。因此，NIO 
+可以让服务器端使用一个或有限几个线程来同时处理连接到服务器端的所有客户端。</p>
+<p>　　<span style="color: #008000;">二、选择器（Selector）</span></p>
+<p>　　选择器（Selector）是SelectableChannle 对象的多路复用器，Selector 
+可以同时监控多个SelectableChannel 的IO 状况，也就是说，利用Selector 
+可使一个单独的线程管理多个Channel。Selector 是非阻塞IO 的核心。</p>
+<p>　　SelectableChannle 的结构如下图：</p>
+<p>　　<img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/1192089-20180601223133243-961374600.png" alt=""></p>
+<p>　　<span style="color: #008080;">选择器（Selector）的应用</span></p>
+<p>　　创建Selector ：通过调用Selector.open() 方法创建一个Selector。</p>
+<p><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/1192089-20180601223203337-1741769836.png" alt="" width="958" height="81"></p>
+<p>　　向选择器注册通道：SelectableChannel.register(Selector sel, int ops)</p>
+<p>　　<img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/1192089-20180601223257423-119705950.png" alt="" width="896" height="428"></p>
+<p>　　当调用register(Selector sel, int ops) 将通道注册选择器时，选择器对通道的监听事件，需要通过第二个参数ops 指定。</p>
+<p>　　可以监听的事件类型（可使用SelectionKey 的四个常量表示）：</p>
+<p>　　读: SelectionKey.OP_READ （1）<br>　　写: SelectionKey.OP_WRITE （4）<br>　　连接: SelectionKey.OP_CONNECT（8）<br>　　接收: SelectionKey.OP_ACCEPT （16）</p>
+<p>&nbsp;　　若注册时不止监听一个事件，则可以使用“位或”操作符连接。</p>
+<p>　　<img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/1192089-20180601223429481-499685091.png" alt="" width="929" height="92"></p>
+<p>　　SelectionKey：表示SelectableChannel 和Selector 之间的注册关系。每次向选择器注册通道时就会选择一个事件(选择键)。选择键包含两个表示为整数值的操作集。操作集的每一位都表示该键的通道所支持的一类可选择操作。</p>
+<p>　　<img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/1192089-20180601223607048-1585337388.png" alt=""></p>
+<p>　　<span style="color: #008080;">Selector 的常用方法</span></p>
+<p>　　<img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/1192089-20180601223636900-1577487416.png" alt=""></p>
+<p>　　<span style="color: #008080;">SocketChannel</span></p>
+<p>　　Java NIO中的SocketChannel是一个连接到TCP网络套接字的通道。</p>
+<p>　　操作步骤：<br>　　打开SocketChannel<br>　　读写数据<br>　　关闭SocketChannel</p>
+<p>　　Java NIO中的ServerSocketChannel 是一个可以监听新进来的TCP连接的通道，就像标准IO中的ServerSocket一样。</p>
+<p>　　<span style="color: #008080;">DatagramChannel</span></p>
+<p>　　Java NIO中的DatagramChannel是一个能收发UDP包的通道。</p>
+<p>　　操作步骤：</p>
+<p>　　打开DatagramChannel<br>　　接收/发送数据</p>
+<p>　　代码分析：</p>
+<p>　　阻塞式IO：</p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="color: #0000ff;">package</span><span style="color: #000000;"> com.atguigu.nio;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.io.IOException;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.net.InetSocketAddress;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.ByteBuffer;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.channels.FileChannel;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.channels.ServerSocketChannel;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.channels.SocketChannel;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.file.Paths;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.file.StandardOpenOption;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> org.junit.Test;
+
+</span><span style="color: #008000;">/*</span><span style="color: #008000;">
+ * 一、使用 NIO 完成网络通信的三个核心：
+ * 
+ * 1. 通道（Channel）：负责连接
+ *         
+ *        java.nio.channels.Channel 接口：
+ *             |--SelectableChannel
+ *                 |--SocketChannel
+ *                 |--ServerSocketChannel
+ *                 |--DatagramChannel
+ * 
+ *                 |--Pipe.SinkChannel
+ *                 |--Pipe.SourceChannel
+ * 
+ * 2. 缓冲区（Buffer）：负责数据的存取
+ * 
+ * 3. 选择器（Selector）：是 SelectableChannel 的多路复用器。用于监控 SelectableChannel 的 IO 状况
+ * 
+ </span><span style="color: #008000;">*/</span>
+<span style="color: #008000;">/**</span><span style="color: #008000;">
+ * 阴塞式IO:服务端读取客户端数据
+ * </span><span style="color: #808080;">@author</span><span style="color: #008000;"> Administrator
+ *
+ </span><span style="color: #008000;">*/</span>
+<span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> TestBlockingNIO {
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">客户端</span>
+<span style="color: #000000;">    @Test
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> client() <span style="color: #0000ff;">throws</span><span style="color: #000000;"> IOException{
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">1. 获取通道</span>
+        SocketChannel sChannel = SocketChannel.open(<span style="color: #0000ff;">new</span> InetSocketAddress("127.0.0.1", 9898<span style="color: #000000;">));
+        
+        FileChannel inChannel </span>= FileChannel.open(Paths.get("1.jpg"<span style="color: #000000;">), StandardOpenOption.READ);
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">2. 分配指定大小的缓冲区</span>
+        ByteBuffer buf = ByteBuffer.allocate(1024<span style="color: #000000;">);
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">3. 读取本地文件，并发送到服务端</span>
+        <span style="color: #0000ff;">while</span>(inChannel.read(buf) != -1<span style="color: #000000;">){
+            buf.flip();
+            sChannel.write(buf);
+            buf.clear();
+        }
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">4. 关闭通道</span>
+<span style="color: #000000;">        inChannel.close();
+        sChannel.close();
+    }
+    
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">服务端</span>
+<span style="color: #000000;">    @Test
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> server() <span style="color: #0000ff;">throws</span><span style="color: #000000;"> IOException{
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">1. 获取通道</span>
+        ServerSocketChannel ssChannel =<span style="color: #000000;"> ServerSocketChannel.open();
+        
+        FileChannel outChannel </span>= FileChannel.open(Paths.get("2.jpg"<span style="color: #000000;">), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">2. 绑定连接</span>
+        ssChannel.bind(<span style="color: #0000ff;">new</span> InetSocketAddress(9898<span style="color: #000000;">));
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">3. 获取客户端连接的通道</span>
+        SocketChannel sChannel =<span style="color: #000000;"> ssChannel.accept();
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">4. 分配指定大小的缓冲区</span>
+        ByteBuffer buf = ByteBuffer.allocate(1024<span style="color: #000000;">);
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">5. 接收客户端的数据，并保存到本地</span>
+        <span style="color: #0000ff;">while</span>(sChannel.read(buf) != -1<span style="color: #000000;">){
+            buf.flip();
+            outChannel.write(buf);
+            buf.clear();
+        }
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">6. 关闭通道</span>
+<span style="color: #000000;">        sChannel.close();
+        outChannel.close();
+        ssChannel.close();
+        
+    }
+    
+}</span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p>&nbsp;</p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="color: #0000ff;">package</span><span style="color: #000000;"> com.atguigu.nio;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.io.IOException;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.net.InetSocketAddress;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.ByteBuffer;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.channels.FileChannel;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.channels.ServerSocketChannel;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.channels.SocketChannel;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.file.Paths;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.file.StandardOpenOption;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> org.junit.Test;
+
+</span><span style="color: #008000;">/**</span><span style="color: #008000;">
+ * 阴塞式IO：服务端读取客户端数据并向客户端发送数据
+ * </span><span style="color: #808080;">@author</span><span style="color: #008000;"> Administrator
+ *
+ </span><span style="color: #008000;">*/</span>
+<span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> TestBlockingNIO2 {
+    
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">客户端</span>
+<span style="color: #000000;">    @Test
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> client() <span style="color: #0000ff;">throws</span><span style="color: #000000;"> IOException{
+        SocketChannel sChannel </span>= SocketChannel.open(<span style="color: #0000ff;">new</span> InetSocketAddress("127.0.0.1", 9898<span style="color: #000000;">));
+        
+        FileChannel inChannel </span>= FileChannel.open(Paths.get("1.jpg"<span style="color: #000000;">), StandardOpenOption.READ);
+        
+        ByteBuffer buf </span>= ByteBuffer.allocate(1024<span style="color: #000000;">);
+        
+        </span><span style="color: #0000ff;">while</span>(inChannel.read(buf) != -1<span style="color: #000000;">){
+            buf.flip();
+            sChannel.write(buf);
+            buf.clear();
+        }
+        
+        sChannel.shutdownOutput();
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">接收服务端的反馈</span>
+        <span style="color: #0000ff;">int</span> len = 0<span style="color: #000000;">;
+        </span><span style="color: #0000ff;">while</span>((len = sChannel.read(buf)) != -1<span style="color: #000000;">){
+            buf.flip();
+            System.out.println(</span><span style="color: #0000ff;">new</span> String(buf.array(), 0<span style="color: #000000;">, len));
+            buf.clear();
+        }
+        
+        inChannel.close();
+        sChannel.close();
+    }
+    
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">服务端</span>
+<span style="color: #000000;">    @Test
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> server() <span style="color: #0000ff;">throws</span><span style="color: #000000;"> IOException{
+        ServerSocketChannel ssChannel </span>=<span style="color: #000000;"> ServerSocketChannel.open();
+        
+        FileChannel outChannel </span>= FileChannel.open(Paths.get("2.jpg"<span style="color: #000000;">), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+        
+        ssChannel.bind(</span><span style="color: #0000ff;">new</span> InetSocketAddress(9898<span style="color: #000000;">));
+        
+        SocketChannel sChannel </span>=<span style="color: #000000;"> ssChannel.accept();
+        
+        ByteBuffer buf </span>= ByteBuffer.allocate(1024<span style="color: #000000;">);
+        
+        </span><span style="color: #0000ff;">while</span>(sChannel.read(buf) != -1<span style="color: #000000;">){
+            buf.flip();
+            outChannel.write(buf);
+            buf.clear();
+        }
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">发送反馈给客户端</span>
+        buf.put("服务端接收数据成功"<span style="color: #000000;">.getBytes());
+        buf.flip();
+        sChannel.write(buf);
+        
+        sChannel.close();
+        outChannel.close();
+        ssChannel.close();
+    }
+
+}</span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p>　　非阻塞式IO：</p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="color: #0000ff;">package</span><span style="color: #000000;"> com.atguigu.nio;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.io.IOException;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.net.InetSocketAddress;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.ByteBuffer;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.channels.SelectionKey;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.channels.Selector;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.channels.ServerSocketChannel;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.channels.SocketChannel;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.util.Date;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.util.Iterator;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.util.Scanner;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> org.junit.Test;
+
+</span><span style="color: #008000;">/*</span><span style="color: #008000;">
+ * 一、使用 NIO 完成网络通信的三个核心：
+ * 
+ * 1. 通道（Channel）：负责连接
+ *         
+ *        java.nio.channels.Channel 接口：
+ *             |--SelectableChannel
+ *                 |--SocketChannel
+ *                 |--ServerSocketChannel
+ *                 |--DatagramChannel
+ * 
+ *                 |--Pipe.SinkChannel
+ *                 |--Pipe.SourceChannel
+ * 
+ * 2. 缓冲区（Buffer）：负责数据的存取
+ * 
+ * 3. 选择器（Selector）：是 SelectableChannel 的多路复用器。用于监控 SelectableChannel 的 IO 状况
+ * 
+ </span><span style="color: #008000;">*/</span>
+
+<span style="color: #008000;">/**</span><span style="color: #008000;">
+ * 非阻塞IO：给Socket通道注册选择器，通过轮询来处理客户端请求
+ * </span><span style="color: #808080;">@author</span><span style="color: #008000;"> Administrator
+ *
+ </span><span style="color: #008000;">*/</span>
+<span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> TestNonBlockingNIO {
+    
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">客户端</span>
+<span style="color: #000000;">    @Test
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> client() <span style="color: #0000ff;">throws</span><span style="color: #000000;"> IOException{
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">1. 获取通道</span>
+        SocketChannel sChannel = SocketChannel.open(<span style="color: #0000ff;">new</span> InetSocketAddress("127.0.0.1", 9898<span style="color: #000000;">));
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">2. 切换非阻塞模式</span>
+        sChannel.configureBlocking(<span style="color: #0000ff;">false</span><span style="color: #000000;">);
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">3. 分配指定大小的缓冲区</span>
+        ByteBuffer buf = ByteBuffer.allocate(1024<span style="color: #000000;">);
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">4. 发送数据给服务端</span>
+        Scanner scan = <span style="color: #0000ff;">new</span><span style="color: #000000;"> Scanner(System.in);
+        
+        </span><span style="color: #0000ff;">while</span><span style="color: #000000;">(scan.hasNext()){
+            String str </span>=<span style="color: #000000;"> scan.next();
+            buf.put((</span><span style="color: #0000ff;">new</span> Date().toString() + "\n" +<span style="color: #000000;"> str).getBytes());
+            buf.flip();
+            sChannel.write(buf);
+            buf.clear();
+        }
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">5. 关闭通道</span>
+<span style="color: #000000;">        sChannel.close();
+    }
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">服务端</span>
+<span style="color: #000000;">    @Test
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> server() <span style="color: #0000ff;">throws</span><span style="color: #000000;"> IOException{
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">1. 获取通道</span>
+        ServerSocketChannel ssChannel =<span style="color: #000000;"> ServerSocketChannel.open();
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">2. 切换非阻塞模式</span>
+        ssChannel.configureBlocking(<span style="color: #0000ff;">false</span><span style="color: #000000;">);
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">3. 绑定连接</span>
+        ssChannel.bind(<span style="color: #0000ff;">new</span> InetSocketAddress(9898<span style="color: #000000;">));
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">4. 获取选择器</span>
+        Selector selector =<span style="color: #000000;"> Selector.open();
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">5. 将通道注册到选择器上, 并且指定“监听接收事件”</span>
+<span style="color: #000000;">        ssChannel.register(selector, SelectionKey.OP_ACCEPT);
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">6. 轮询式的获取选择器上已经“准备就绪”的事件</span>
+        <span style="color: #0000ff;">while</span>(selector.select() &gt; 0<span style="color: #000000;">){
+            
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">7. 获取当前选择器中所有注册的“选择键(已就绪的监听事件)”</span>
+            Iterator&lt;SelectionKey&gt; it =<span style="color: #000000;"> selector.selectedKeys().iterator();
+            
+            </span><span style="color: #0000ff;">while</span><span style="color: #000000;">(it.hasNext()){
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">8. 获取准备“就绪”的是事件</span>
+                SelectionKey sk =<span style="color: #000000;"> it.next();
+                
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">9. 判断具体是什么事件准备就绪</span>
+                <span style="color: #0000ff;">if</span><span style="color: #000000;">(sk.isAcceptable()){
+                    </span><span style="color: #008000;">//</span><span style="color: #008000;">10. 若“接收就绪”，获取客户端连接</span>
+                    SocketChannel sChannel =<span style="color: #000000;"> ssChannel.accept();
+                    
+                    </span><span style="color: #008000;">//</span><span style="color: #008000;">11. 切换非阻塞模式</span>
+                    sChannel.configureBlocking(<span style="color: #0000ff;">false</span><span style="color: #000000;">);
+                    
+                    </span><span style="color: #008000;">//</span><span style="color: #008000;">12. 将该通道注册到选择器上</span>
+<span style="color: #000000;">                    sChannel.register(selector, SelectionKey.OP_READ);
+                }</span><span style="color: #0000ff;">else</span> <span style="color: #0000ff;">if</span><span style="color: #000000;">(sk.isReadable()){
+                    </span><span style="color: #008000;">//</span><span style="color: #008000;">13. 获取当前选择器上“读就绪”状态的通道</span>
+                    SocketChannel sChannel =<span style="color: #000000;"> (SocketChannel) sk.channel();
+                    
+                    </span><span style="color: #008000;">//</span><span style="color: #008000;">14. 读取数据</span>
+                    ByteBuffer buf = ByteBuffer.allocate(1024<span style="color: #000000;">);
+                    
+                    </span><span style="color: #0000ff;">int</span> len = 0<span style="color: #000000;">;
+                    </span><span style="color: #0000ff;">while</span>((len = sChannel.read(buf)) &gt; 0<span style="color: #000000;"> ){
+                        buf.flip();
+                        System.out.println(</span><span style="color: #0000ff;">new</span> String(buf.array(), 0<span style="color: #000000;">, len));
+                        buf.clear();
+                    }
+                }
+                
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">15. 取消选择键 SelectionKey</span>
+<span style="color: #000000;">                it.remove();
+            }
+        }
+    }
+}</span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p>&nbsp;</p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="color: #0000ff;">package</span><span style="color: #000000;"> com.atguigu.nio;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.io.IOException;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.net.InetSocketAddress;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.ByteBuffer;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.channels.DatagramChannel;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.channels.SelectionKey;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.channels.Selector;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.util.Date;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.util.Iterator;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.util.Scanner;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> org.junit.Test;
+
+</span><span style="color: #008000;">/**</span><span style="color: #008000;">
+ * 非阻塞IO：datagram通道接收发送数据
+ * </span><span style="color: #808080;">@author</span><span style="color: #008000;"> Administrator
+ *
+ </span><span style="color: #008000;">*/</span>
+<span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> TestNonBlockingNIO2 {
+    
+    @Test
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> send() <span style="color: #0000ff;">throws</span><span style="color: #000000;"> IOException{
+        DatagramChannel dc </span>=<span style="color: #000000;"> DatagramChannel.open();
+        
+        dc.configureBlocking(</span><span style="color: #0000ff;">false</span><span style="color: #000000;">);
+        
+        ByteBuffer buf </span>= ByteBuffer.allocate(1024<span style="color: #000000;">);
+        
+        Scanner scan </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> Scanner(System.in);
+        
+        </span><span style="color: #0000ff;">while</span><span style="color: #000000;">(scan.hasNext()){
+            String str </span>=<span style="color: #000000;"> scan.next();
+            buf.put((</span><span style="color: #0000ff;">new</span> Date().toString() + ":\n" +<span style="color: #000000;"> str).getBytes());
+            buf.flip();
+            dc.send(buf, </span><span style="color: #0000ff;">new</span> InetSocketAddress("127.0.0.1", 9898<span style="color: #000000;">));
+            buf.clear();
+        }
+        
+        
+        dc.close();
+    }
+    
+    @Test
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> receive() <span style="color: #0000ff;">throws</span><span style="color: #000000;"> IOException{
+        DatagramChannel dc </span>=<span style="color: #000000;"> DatagramChannel.open();
+        
+        dc.configureBlocking(</span><span style="color: #0000ff;">false</span><span style="color: #000000;">);
+        
+        dc.bind(</span><span style="color: #0000ff;">new</span> InetSocketAddress(9898<span style="color: #000000;">));
+        
+        Selector selector </span>=<span style="color: #000000;"> Selector.open();
+        
+        dc.register(selector, SelectionKey.OP_READ);
+        
+        </span><span style="color: #0000ff;">while</span>(selector.select() &gt; 0<span style="color: #000000;">){
+            Iterator</span>&lt;SelectionKey&gt; it =<span style="color: #000000;"> selector.selectedKeys().iterator();
+            
+            </span><span style="color: #0000ff;">while</span><span style="color: #000000;">(it.hasNext()){
+                SelectionKey sk </span>=<span style="color: #000000;"> it.next();
+                
+                </span><span style="color: #0000ff;">if</span><span style="color: #000000;">(sk.isReadable()){
+                    ByteBuffer buf </span>= ByteBuffer.allocate(1024<span style="color: #000000;">);
+                    
+                    dc.receive(buf);
+                    buf.flip();
+                    System.out.println(</span><span style="color: #0000ff;">new</span> String(buf.array(), 0<span style="color: #000000;">, buf.limit()));
+                    buf.clear();
+                }
+            }
+            
+            it.remove();
+        }
+    }
+
+}</span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p>　　<span style="color: #008000;">三、管道(Pipe)</span></p>
+<p>　　Java NIO 管道是2个线程之间的单向数据连接。Pipe有一个source通道和一个sink通道。数据会被写到sink通道，从source通道读取。</p>
+<p>　　<img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/1192089-20180601225109666-1641564556.png" alt=""></p>
+<p>　　<span style="color: #008080;">向管道写数据</span></p>
+<p>　　<img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/1192089-20180601225134379-840655134.png" alt=""></p>
+<p>　　<span style="color: #008080;">从管道读取数据</span></p>
+<p>　　从读取管道的数据，需要访问source通道。</p>
+<p>　　<img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/1192089-20180601225156700-1179383385.png" alt="" width="942" height="88"></p>
+<p>　　调用source通道的read()方法来读取数据</p>
+<p>　　<img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/1192089-20180601225228714-686958450.png" alt="" width="1015" height="100"></p>
+<p>　　代码分析：</p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="color: #0000ff;">package</span><span style="color: #000000;"> com.atguigu.nio;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.io.IOException;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.ByteBuffer;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.channels.Pipe;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> org.junit.Test;
+
+</span><span style="color: #008000;">/**</span><span style="color: #008000;">
+ * 管道是2个线程之间的单向数据连接。Pipe有一个source通道和一个sink通道。数据会被写到sink通道，从source通道读取。
+ * 类似的有管道输入流，管道输出流
+ * </span><span style="color: #808080;">@author</span><span style="color: #008000;"> Administrator
+ *
+ </span><span style="color: #008000;">*/</span>
+<span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> TestPipe {
+
+    @Test
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> test1() <span style="color: #0000ff;">throws</span><span style="color: #000000;"> IOException{
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">1. 获取管道</span>
+        Pipe pipe =<span style="color: #000000;"> Pipe.open();
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">2. 将缓冲区中的数据写入管道</span>
+        ByteBuffer buf = ByteBuffer.allocate(1024<span style="color: #000000;">);
+        
+        Pipe.SinkChannel sinkChannel </span>=<span style="color: #000000;"> pipe.sink();
+        buf.put(</span>"通过单向管道发送数据"<span style="color: #000000;">.getBytes());
+        buf.flip();
+        sinkChannel.write(buf);
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">3. 读取缓冲区中的数据</span>
+        Pipe.SourceChannel sourceChannel =<span style="color: #000000;"> pipe.source();
+        buf.flip();
+        </span><span style="color: #0000ff;">int</span> len =<span style="color: #000000;"> sourceChannel.read(buf);
+        System.out.println(</span><span style="color: #0000ff;">new</span> String(buf.array(), 0<span style="color: #000000;">, len));
+        
+        sourceChannel.close();
+        sinkChannel.close();
+    }
+    
+}</span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p>　　四、NIO.2 <span style="color: #008080;">–Path、Paths、Files</span></p>
+<p>　　随着JDK 7 的发布，Java对NIO进行了极大的扩展，增强了对文件处理和文件系统特性的支持，以至于我们称他们为NIO.2。因为NIO 提供的一些功能，NIO已经成为文件处理中越来越重要的部分。</p>
+<p>　　<span style="color: #008080;">Path 与Paths</span></p>
+<p>　　java.nio.file.Path 接口代表一个平台无关的平台路径，描述了目录结构中文件的位置。</p>
+<p>　　Paths 提供的get() 方法用来获取Path 对象：</p>
+<p>　　Path get(String first, String … more) : 用于将多个字符串串连成路径。</p>
+<p>　　Path常用方法：</p>
+<p>　　boolean endsWith(String path) : 判断是否以path 路径结束<br>　　boolean startsWith(String path) : 判断是否以path 路径开始<br>　　boolean isAbsolute() : 判断是否是绝对路径<br>　　Path getFileName() : 返回与调用Path 对象关联的文件名<br>　　Path getName(int idx) : 返回的指定索引位置idx 的路径名称<br>　　int getNameCount() : 返回Path 根目录后面元素的数量<br>　　Path getParent() ：返回Path对象包含整个路径，不包含Path 对象指定的文件路径<br>　　Path getRoot() ：返回调用Path 对象的根路径<br>　　Path resolve(Path p) :将相对路径解析为绝对路径<br>　　Path toAbsolutePath() : 作为绝对路径返回调用Path 对象<br>　　String toString() ：返回调用Path 对象的字符串表示形式</p>
+<p>&nbsp;　　java.nio.file.Files 用于操作文件或目录的工具类。</p>
+<p>　　<span style="color: #008080;">Files</span></p>
+<p>　　Files常用方法：</p>
+<p>　　Path copy(Path src, Path dest, CopyOption … how) : 文件的复制<br>　　Path createDirectory(Path path, FileAttribute&lt;?&gt; … attr) : 创建一个目录<br>　　Path createFile(Path path, FileAttribute&lt;?&gt; … arr) : 创建一个文件<br>　　void delete(Path path) : 删除一个文件<br>　　Path move(Path src, Path dest, CopyOption…how) : 将src 移动到dest 位置<br>　　long size(Path path) : 返回path 指定文件的大小</p>
+<p>　　Files常用方法：用于判断</p>
+<p>　　boolean exists(Path path, LinkOption … opts) : 判断文件是否存在<br>　　boolean isDirectory(Path path, LinkOption … opts) : 判断是否是目录<br>　　boolean isExecutable(Path path) : 判断是否是可执行文件<br>　　boolean isHidden(Path path) : 判断是否是隐藏文件<br>　　boolean isReadable(Path path) : 判断文件是否可读<br>　　boolean isWritable(Path path) : 判断文件是否可写<br>　　boolean notExists(Path path, LinkOption … opts) : 判断文件是否不存在<br>　
+　public static &lt;A extends BasicFileAttributes&gt; A 
+readAttributes(Path path,Class&lt;A&gt; type,LinkOption... options) : 
+获取与path 指定的文件相关联的属性。</p>
+<p>　　Files常用方法：用于操作内容</p>
+<p>　　SeekableByteChannel newByteChannel(Path path, OpenOption…how) : 获取与指定文件的连接，how 指定打开方式。<br>　　DirectoryStream newDirectoryStream(Path path) : 打开path 指定的目录<br>　　InputStream newInputStream(Path path, OpenOption…how):获取InputStream 对象<br>　　OutputStream newOutputStream(Path path, OpenOption…how) : 获取OutputStream 对象</p>
+<p>　　<span style="color: #008080;">自动资源管理</span></p>
+<p>　　Java 7 
+增加了一个新特性，该特性提供了另外一种管理资源的方式，这种方式能自动关闭文件。这个特性有时被称为自动资源管理(Automatic 
+Resource Management, ARM)，该特性以try 
+语句的扩展版为基础。自动资源管理主要用于，当不再需要文件（或其他资源）时，可以防止无意中忘记释放它们。</p>
+<p>　　自动资源管理基于try 语句的扩展形式：</p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="color: #0000ff;">try</span><span style="color: #000000;">(需要关闭的资源声明){
+</span><span style="color: #008000;">//</span><span style="color: #008000;">可能发生异常的语句</span>
+}<span style="color: #0000ff;">catch</span><span style="color: #000000;">(异常类型变量名){
+</span><span style="color: #008000;">//</span><span style="color: #008000;">异常的处理语句</span>
+<span style="color: #000000;">}
+……
+</span><span style="color: #0000ff;">finally</span><span style="color: #000000;">{
+</span><span style="color: #008000;">//</span><span style="color: #008000;">一定执行的语句</span>
+}</pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p>　　try 代码块结束时，自动释放资源。因此不需要显示的调用close() 方法。该形式也称为“带资源的try 语句”。<br>　　注意：<br>　　①try 语句中声明的资源被隐式声明为final ，资源的作用局限于带资源的try 语句<br>　　②可以在一条try 语句中管理多个资源，每个资源以“;” 隔开即可。<br>　　③需要关闭的资源，必须实现了AutoCloseable 接口或其子接口Closeable</p>
+<p>　　代码分析：</p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="color: #0000ff;">package</span><span style="color: #000000;"> com.atguigu.nio;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.io.IOException;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.ByteBuffer;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.channels.FileChannel;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.channels.SeekableByteChannel;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.file.DirectoryStream;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.file.Files;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.file.LinkOption;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.file.Path;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.file.Paths;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.file.StandardCopyOption;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.file.StandardOpenOption;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.file.attribute.BasicFileAttributes;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.file.attribute.DosFileAttributeView;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> org.junit.Test;
+
+</span><span style="color: #008000;">/**</span><span style="color: #008000;">
+ * Paths中的方法使用
+ * </span><span style="color: #808080;">@author</span><span style="color: #008000;"> Administrator
+ *
+ </span><span style="color: #008000;">*/</span>
+<span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> TestNIO_2 {
+    
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * JAVA7新特性：TWR
+     * 自动资源管理：自动关闭实现 AutoCloseable 接口的资源
+     </span><span style="color: #008000;">*/</span><span style="color: #000000;">
+    @Test
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> test8(){
+        </span><span style="color: #0000ff;">try</span>(FileChannel inChannel = FileChannel.open(Paths.get("1.jpg"<span style="color: #000000;">), StandardOpenOption.READ);
+                FileChannel outChannel </span>= FileChannel.open(Paths.get("2.jpg"<span style="color: #000000;">), StandardOpenOption.WRITE, StandardOpenOption.CREATE)){
+            
+            ByteBuffer buf </span>= ByteBuffer.allocate(1024<span style="color: #000000;">);
+            inChannel.read(buf);
+            
+        }</span><span style="color: #0000ff;">catch</span><span style="color: #000000;">(IOException e){
+            
+        }
+    }
+    
+    </span><span style="color: #008000;">/*</span><span style="color: #008000;">
+        Files常用方法：用于操作内容
+            SeekableByteChannel newByteChannel(Path path, OpenOption…how) : 获取与指定文件的连接，how 指定打开方式。
+            DirectoryStream newDirectoryStream(Path path) : 打开 path 指定的目录
+            InputStream newInputStream(Path path, OpenOption…how):获取 InputStream 对象
+            OutputStream newOutputStream(Path path, OpenOption…how) : 获取 OutputStream 对象
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #008000;">/**</span><span style="color: #008000;">
+     * SeekableByteChannel接口，允许我们定位到文件的任意位置进行读写。注意这里的写，不是新增式的插入，而是覆盖，当然在文件末尾的写，是新增。
+     * 读取文件夹下的所有Path
+     * </span><span style="color: #808080;">@throws</span><span style="color: #008000;"> IOException
+     </span><span style="color: #008000;">*/</span><span style="color: #000000;">
+    @Test
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> test7() <span style="color: #0000ff;">throws</span><span style="color: #000000;"> IOException{
+        SeekableByteChannel newByteChannel </span>= Files.newByteChannel(Paths.get("1.jpg"<span style="color: #000000;">), StandardOpenOption.READ);
+        
+        DirectoryStream</span>&lt;Path&gt; newDirectoryStream = Files.newDirectoryStream(Paths.get("e:/"<span style="color: #000000;">));
+        
+        </span><span style="color: #0000ff;">for</span><span style="color: #000000;"> (Path path : newDirectoryStream) {
+            System.out.println(path);
+        }
+    }
+    
+    </span><span style="color: #008000;">/*</span><span style="color: #008000;">
+        Files常用方法：用于判断
+            boolean exists(Path path, LinkOption … opts) : 判断文件是否存在
+            boolean isDirectory(Path path, LinkOption … opts) : 判断是否是目录
+            boolean isExecutable(Path path) : 判断是否是可执行文件
+            boolean isHidden(Path path) : 判断是否是隐藏文件
+            boolean isReadable(Path path) : 判断文件是否可读
+            boolean isWritable(Path path) : 判断文件是否可写
+            boolean notExists(Path path, LinkOption … opts) : 判断文件是否不存在
+            public static &lt;A extends BasicFileAttributes&gt; A readAttributes(Path path,Class&lt;A&gt; type,LinkOption... options) : 获取与 path 指定的文件相关联的属性。
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 查看设置判断文件基本属性
+     * </span><span style="color: #808080;">@throws</span><span style="color: #008000;"> IOException
+     </span><span style="color: #008000;">*/</span><span style="color: #000000;">
+    @Test
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> test6() <span style="color: #0000ff;">throws</span><span style="color: #000000;"> IOException{
+        Path path </span>= Paths.get("e:/nio/hello7.txt"<span style="color: #000000;">);
+        System.out.println(Files.exists(path, LinkOption.NOFOLLOW_LINKS));
+        
+        BasicFileAttributes readAttributes </span>= Files.readAttributes(path, BasicFileAttributes.<span style="color: #0000ff;">class</span><span style="color: #000000;">, LinkOption.NOFOLLOW_LINKS);
+        System.out.println(readAttributes.creationTime());
+        System.out.println(readAttributes.lastModifiedTime());
+        
+        DosFileAttributeView fileAttributeView </span>= Files.getFileAttributeView(path, DosFileAttributeView.<span style="color: #0000ff;">class</span><span style="color: #000000;">, LinkOption.NOFOLLOW_LINKS);
+        
+        fileAttributeView.setHidden(</span><span style="color: #0000ff;">false</span><span style="color: #000000;">);
+    }
+    
+    </span><span style="color: #008000;">/*</span><span style="color: #008000;">
+        Files常用方法：
+            Path copy(Path src, Path dest, CopyOption … how) : 文件的复制
+            Path createDirectory(Path path, FileAttribute&lt;?&gt; … attr) : 创建一个目录
+            Path createFile(Path path, FileAttribute&lt;?&gt; … arr) : 创建一个文件
+            void delete(Path path) : 删除一个文件
+            Path move(Path src, Path dest, CopyOption…how) : 将 src 移动到 dest 位置
+            long size(Path path) : 返回 path 指定文件的大小
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 获取文件大小
+     * </span><span style="color: #808080;">@throws</span><span style="color: #008000;"> IOException
+     </span><span style="color: #008000;">*/</span><span style="color: #000000;">
+    @Test
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> test5() <span style="color: #0000ff;">throws</span><span style="color: #000000;"> IOException{
+        Path path1 </span>= Paths.get("e:/nio/hello2.txt"<span style="color: #000000;">);
+        Path path2 </span>= Paths.get("e:/nio/hello7.txt"<span style="color: #000000;">);
+        
+        System.out.println(Files.size(path2));
+        
+</span><span style="color: #008000;">//</span><span style="color: #008000;">        Files.move(path1, path2, StandardCopyOption.ATOMIC_MOVE);</span>
+<span style="color: #000000;">    }
+    
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+    *创建目录文件及删除
+    </span><span style="color: #008000;">*/</span><span style="color: #000000;">
+    @Test
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> test4() <span style="color: #0000ff;">throws</span><span style="color: #000000;"> IOException{
+        Path dir </span>= Paths.get("e:/nio/nio2"<span style="color: #000000;">);
+        Files.createDirectory(dir);
+        
+        Path file </span>= Paths.get("e:/nio/nio2/hello3.txt"<span style="color: #000000;">);
+        Files.createFile(file);
+        
+        Files.deleteIfExists(file);
+    }
+    
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 文件的复制
+     * </span><span style="color: #808080;">@throws</span><span style="color: #008000;"> IOException
+     </span><span style="color: #008000;">*/</span><span style="color: #000000;">
+    @Test
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> test3() <span style="color: #0000ff;">throws</span><span style="color: #000000;"> IOException{
+        Path path1 </span>= Paths.get("e:/nio/hello.txt"<span style="color: #000000;">);
+        Path path2 </span>= Paths.get("e:/nio/hello2.txt"<span style="color: #000000;">);
+        
+        Files.copy(path1, path2, StandardCopyOption.REPLACE_EXISTING);
+    }
+    
+    </span><span style="color: #008000;">/*</span><span style="color: #008000;">
+        Paths 提供的 get() 方法用来获取 Path 对象：
+            Path get(String first, String … more) : 用于将多个字符串串连成路径。
+        Path 常用方法：
+            boolean endsWith(String path) : 判断是否以 path 路径结束
+            boolean startsWith(String path) : 判断是否以 path 路径开始
+            boolean isAbsolute() : 判断是否是绝对路径
+            Path getFileName() : 返回与调用 Path 对象关联的文件名
+            Path getName(int idx) : 返回的指定索引位置 idx 的路径名称
+            int getNameCount() : 返回Path 根目录后面元素的数量
+            Path getParent() ：返回Path对象包含整个路径，不包含 Path 对象指定的文件路径
+            Path getRoot() ：返回调用 Path 对象的根路径
+            Path resolve(Path p) :将相对路径解析为绝对路径
+            Path toAbsolutePath() : 作为绝对路径返回调用 Path 对象
+            String toString() ： 返回调用 Path 对象的字符串表示形式
+     </span><span style="color: #008000;">*/</span><span style="color: #000000;">
+    @Test
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> test2(){
+        Path path </span>= Paths.get("e:/nio/hello.txt"<span style="color: #000000;">);
+        
+        System.out.println(path.getParent());
+        System.out.println(path.getRoot());
+        
+        Path newPath </span>= path.resolve("e:/hello.txt"<span style="color: #000000;">);
+        System.out.println(newPath);
+        
+        Path path2 </span>= Paths.get("1.jpg"<span style="color: #000000;">);
+        Path newPath2 </span>=<span style="color: #000000;"> path2.toAbsolutePath();
+        System.out.println(newPath2);
+        
+        System.out.println(path.toString());
+    }
+    
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * Paths中的一些辅助方法：endsWith，startsWith，isAbsolute，getFileName，getNameCount，getName
+     </span><span style="color: #008000;">*/</span><span style="color: #000000;">
+    @Test
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> test1(){
+        Path path </span>= Paths.get("e:/", "nio/hello.txt"<span style="color: #000000;">);
+        
+        System.out.println(path.endsWith(</span>"hello.txt"<span style="color: #000000;">));
+        System.out.println(path.startsWith(</span>"e:/"<span style="color: #000000;">));
+        
+        System.out.println(path.isAbsolute());
+        System.out.println(path.getFileName());
+        
+        </span><span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> i = 0; i &lt; path.getNameCount(); i++<span style="color: #000000;">) {
+            System.out.println(path.getName(i));
+        }
+    }
+}</span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p>&nbsp;</p></div><div id="MySignature" style="display: block;">When I desperate: this's life; and conscious: that's lie; more frequently: there's light.</div>
+<div class="clear"></div>
+<div id="blog_post_info_block">
+<div id="BlogPostCategory">分类: <a href="https://www.cnblogs.com/liunianfeiyu/category/1027292.html" target="_blank">java</a></div>
+<div id="EntryTag"></div>
+<div id="blog_post_info"><div id="green_channel">
+        <a href="javascript:void(0);" id="green_channel_digg" onclick="DiggIt(9031914,cb_blogId,1);green_channel_success(this,'谢谢推荐！');">好文要顶</a>
+            <a id="green_channel_follow" onclick="follow('f22ce207-f29f-4312-ffd1-08d49c352df2');" href="javascript:void(0);">关注我</a>
+    <a id="green_channel_favorite" onclick="AddToWz(cb_entryId);return false;" href="javascript:void(0);">收藏该文</a>
+    <a id="green_channel_weibo" href="javascript:void(0);" title="分享至新浪微博" onclick="ShareToTsina()"><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/icon_weibo_24.png" alt=""></a>
+    <a id="green_channel_wechat" href="javascript:void(0);" title="分享至微信" onclick="shareOnWechat()"><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/wechat.png" alt=""></a>
+</div>
+<div id="author_profile">
+    <div id="author_profile_info" class="author_profile_info">
+            <a href="http://home.cnblogs.com/u/liunianfeiyu/" target="_blank"><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/20180209230130.png" class="author_avatar" alt=""></a>
+        <div id="author_profile_detail" class="author_profile_info">
+            <a href="http://home.cnblogs.com/u/liunianfeiyu/">流年飞雨</a><br>
+            <a href="http://home.cnblogs.com/u/liunianfeiyu/followees">关注 - 28</a><br>
+            <a href="http://home.cnblogs.com/u/liunianfeiyu/followers">粉丝 - 12</a>
+        </div>
+    </div>
+    <div class="clear"></div>
+    <div id="author_profile_honor"></div>
+    <div id="author_profile_follow">
+    </div>
+</div>
+<div id="div_digg">
+    <div class="diggit" onclick="votePost(9031914,'Digg')">
+        <span class="diggnum" id="digg_count">0</span>
+    </div>
+    <div class="buryit" onclick="votePost(9031914,'Bury')">
+        <span class="burynum" id="bury_count">0</span>
+    </div>
+    <div class="clear"></div>
+    <div class="diggword" id="digg_tips">
+    </div>
+</div>
+<script type="text/javascript">
+    currentDiggType = 0;
+</script></div>
+<div class="clear"></div>
+<div id="post_next_prev"><a href="https://www.cnblogs.com/liunianfeiyu/p/9085072.html" class="p_n_p_prefix">« </a> 上一篇：<a href="https://www.cnblogs.com/liunianfeiyu/p/9085072.html" title="发布于2018-05-24 20:59">ubuntu下安装jdk,tomcat,mysql,ftp,telnet,svn</a><br><a href="https://www.cnblogs.com/liunianfeiyu/p/9246685.html" class="p_n_p_prefix">» </a> 下一篇：<a href="https://www.cnblogs.com/liunianfeiyu/p/9246685.html" title="发布于2018-06-30 12:19">jquery实现背景图片动态适应</a><br></div>
+</div>
+
+
+	<div class="postDesc">posted on <span id="post-date">2018-06-01 23:06</span> <a href="https://www.cnblogs.com/liunianfeiyu/">流年飞雨</a> 阅读(<span id="post_view_count">18</span>) 评论(<span id="post_comment_count">0</span>)  <a href="https://i.cnblogs.com/EditPosts.aspx?postid=9031914" rel="nofollow">编辑</a> <a href="#" onclick="AddToWz(9031914);return false;">收藏</a></div>
+</div>
+<script type="text/javascript">var allowComments=true,cb_blogId=364453,cb_entryId=9031914,cb_blogApp=currentBlogApp,cb_blogUserGuid='f22ce207-f29f-4312-ffd1-08d49c352df2',cb_entryCreatedDate='2018/6/1 23:06:00';loadViewCount(cb_entryId);var cb_postType=1;var isMarkdown=false;</script>
+
+</div><a name="!comments"></a><div id="blog-comments-placeholder"></div><script type="text/javascript">var commentManager = new blogCommentManager();commentManager.renderComments(0);</script>
+<div id="comment_form" class="commentform">
+<a name="commentform"></a>
+<div id="divCommentShow"></div>
+<div id="comment_nav"><span id="span_refresh_tips"></span><a href="javascript:void(0);" onclick="return RefreshCommentList();" id="lnk_RefreshComments" runat="server" clientidmode="Static">刷新评论</a><a href="#" onclick="return RefreshPage();">刷新页面</a><a href="#top">返回顶部</a></div>
+<div id="comment_form_container"><script type="text/javascript" src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/mention.js"></script>
+<div id="commentform_title">发表评论</div>
+<span id="tip_comment" style="color:Red"></span>
+<p>
+昵称：<input type="text" id="tbCommentAuthor" class="author" disabled="disabled" size="50" value="流年飞雨">
+</p>
+<div class="commentbox_main">
+<div class="commentbox_title">
+<div class="commentbox_title_left">评论内容：</div>
+<div class="commentbox_title_right">
+<img id="ubb_quote" class="comment_icon" src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/quote.gif" alt="引用" title="添加引用" onclick="insertUBB('tbCommentBody','quote')">
+<img id="ubb_bold" class="comment_icon" src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/b.png" alt="粗体" title="添加粗体" onclick="insertUBB('tbCommentBody','b')">
+<img id="ubb_url" class="comment_icon" src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/lk.png" alt="链接" title="添加链接" onclick="insertUbbUrl('tbCommentBody')">
+<img id="ubb_indent" class="comment_icon" src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/indent.png" alt="缩进" title="添加首行缩进" onclick="insertIndent('tbCommentBody')">
+<img id="ubb_code" class="comment_icon" src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/InsertCode.gif" alt="代码" title="添加代码" onclick="insertUbbCode()">
+<img id="ubb_img" class="comment_icon" src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/img.gif" alt="图片" title="上传图片" onclick="OpenImageUploadWindow();">
+</div>
+</div>
+<div class="clear"></div>
+<textarea id="tbCommentBody" class="comment_textarea"></textarea>
+</div>
+<p id="commentbox_opt">
+<input id="btn_comment_submit" type="button" class="comment_btn" value="提交评论">
+<span id="span_comment_canceledit" style="display:none"><a href="javascript:void(0);" onclick="return CancelCommentEdit()">不改了</a></span>
+<a href="javascript:void(0);" onclick="return logout();">退出</a>
+</p>
+<div id="tip_comment2" style="color:Red"></div>
+<p>
+[Ctrl+Enter快捷键提交]
+</p>
+<div style="display:none">
+<span id="comment_edit_id"></span><span id="span_parentcomment_id"></span>
+<span id="span_parent_id"></span>
+<span id="span_comment_replyto"></span>
+<span id="span_comment_posted"></span>
+</div>
+</div>
+<div class="ad_text_commentbox" id="ad_text_under_commentbox"></div>
+<div id="ad_t2"><a href="http://www.ucancode.com/index.htm" target="_blank" onclick="ga('send', 'event', 'Link', 'click', 'T2-工控')">【推荐】超50万C++/C#源码: 大型实时仿真组态图形源码</a><br><a href="https://cloud.baidu.com/campaign/purchase-2019/index.html?track=cp:dsp|pf:pc|pp:chui-bokeyuan-huodong-19caigouji-BCC-neiyeCH-190311|pu:neiyeCH-wenzilian|ci:2019cgj|kw:2105959" target="_blank" onclick="ga('send', 'event', 'Link', 'click', 'T2-百度云')">【推荐】百度云“猪”你开年行大运，红包疯狂拿，低至1折</a><br><a href="https://gitee.com/enterprises?from=bky-2" target="_blank" onclick="ga('send', 'event', 'Link', 'click', 'T2-gitee')">【推荐】专业便捷的企业级代码托管服务 - Gitee 码云</a><br><a href="https://www.bagevent.com/event/2468856" target="_blank" onclick="ga('send', 'event', 'Link', 'click', 'T2-GAITC')">【活动】2019第四届全球人工技术大会解码“智能+时代”</a><br></div>
+<div id="opt_under_post"></div>
+<script async="async" src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%952-%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F%E7%BD%91%E7%BB%9C%E9%80%9A%E4%BF%A1%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/gpt.js"></script>
+<script>
+  var googletag = googletag || {};
+  googletag.cmd = googletag.cmd || [];
+</script>
+<script>
+  googletag.cmd.push(function() {
+        googletag.defineSlot('/1090369/C1', [300, 250], 'div-gpt-ad-1546353474406-0').addService(googletag.pubads());
+        googletag.defineSlot('/1090369/C2', [468, 60], 'div-gpt-ad-1539008685004-0').addService(googletag.pubads());
+        googletag.pubads().enableSingleRequest();
+        googletag.enableServices();
+  });
+</script>
+<div id="cnblogs_c1" class="c_ad_block">
+    <div id="div-gpt-ad-1546353474406-0" style="height:250px; width:300px;"></div>
+</div>
+<div id="under_post_news"><div class="itnews c_ad_block"><b>相关博文：</b><br>·  <a href="https://www.cnblogs.com/daidu/archive/2009/11/06/1597264.html" target="_blank" onclick="clickRecomItmem(1597264)">java NIO非阻塞式IO网络编程学习笔记(一)</a><br>·  <a href="https://www.cnblogs.com/chengJAVA/p/5715629.html" target="_blank" onclick="clickRecomItmem(5715629)">NIO Socket非阻塞模式</a><br>·  <a href="https://www.cnblogs.com/hanyuanbo/archive/2012/09/10/2679450.html" target="_blank" onclick="clickRecomItmem(2679450)">Java NIO 非阻塞浅谈</a><br>·  <a href="https://www.cnblogs.com/yulinfeng/p/8095326.html" target="_blank" onclick="clickRecomItmem(8095326)">Java IO（3）非阻塞式输入输出（NIO）</a><br>·  <a href="https://www.cnblogs.com/pony1223/p/8186229.html" target="_blank" onclick="clickRecomItmem(8186229)">JAVA NIO学习三：NIO 的非阻塞式网络通信</a><br></div></div>
+<div id="cnblogs_c2" class="c_ad_block">
+    <div id="div-gpt-ad-1539008685004-0" style="height:60px; width:468px;"></div>
+</div>
+<div id="under_post_kb"><div class="itnews c_ad_block"><b>最新新闻</b>：<br> ·  <a href="https://news.cnblogs.com/n/623306/" target="_blank">波音飞船不载人试飞时间推迟至8月 载人试飞也将推迟</a><br> ·  <a href="https://news.cnblogs.com/n/623305/" target="_blank">苹果将继续推出小尺寸iPhone 搭载A12处理器</a><br> ·  <a href="https://news.cnblogs.com/n/623304/" target="_blank">UCloud想吃科创板的“第一个螃蟹”</a><br> ·  <a href="https://news.cnblogs.com/n/623303/" target="_blank">苹果HomePod降价500元：支持24期免息分期</a><br> ·  <a href="https://news.cnblogs.com/n/623302/" target="_blank">三星开始量产5G芯片：要做行业领导者</a><br>» <a href="http://news.cnblogs.com/" title="IT新闻" target="_blank">更多新闻...</a></div></div>
+<div id="HistoryToday" class="c_ad_block"></div>
+<script type="text/javascript">
+ if(enablePostBottom()) {
+    codeHighlight();
+    fixPostBody();
+    setTimeout(function () { incrementViewCount(cb_entryId); }, 50);
+    deliverT2();
+    deliverC1();
+    deliverC2();    
+    loadNewsAndKb();
+    loadBlogSignature();
+    LoadPostInfoBlock(cb_blogId, cb_entryId, cb_blogApp, cb_blogUserGuid);
+    GetPrevNextPost(cb_entryId, cb_blogId, cb_entryCreatedDate, cb_postType);
+    loadOptUnderPost();
+    GetHistoryToday(cb_blogId, cb_blogApp, cb_entryCreatedDate);  
+}
+</script>
+</div>
+
+    
+	
+<!--done-->
+<div class="footer">
+	
+	Copyright ©2019 流年飞雨 Powered by: <a href="http://www.cnblogs.com/" class="footerlink">博客园</a> 模板提供：<a href="http://blog.hjenglish.com/" class="footerlink">沪江博客</a><br>
+</div>
+</div>
+
+
+
+
+
+
+</body></html>

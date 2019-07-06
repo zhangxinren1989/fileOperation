@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="zh-cn"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="origin">
+    <title>JAVA NIO学习记录1-buffer和channel - 流年飞雨 - 博客园</title>
+<meta property="og:description" content="什么是NIO？ Java NIO（New IO）是从Java 1.4版本开始引入的一个新的IO API，可以替代标准的Java IO API。NIO与原来的IO有同样的作用和目的，但是使用的方式完全不">
+    <link type="text/css" rel="stylesheet" href="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/blog-common.css">
+<link id="MainCss" type="text/css" rel="stylesheet" href="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/bundle-arrow.css">
+<link id="mobile-style" media="only screen and (max-width: 767px)" type="text/css" rel="stylesheet" href="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/bundle-arrow-mobile.css">
+    <link title="RSS" type="application/rss+xml" rel="alternate" href="https://www.cnblogs.com/liunianfeiyu/rss">
+    <link title="RSD" type="application/rsd+xml" rel="EditURI" href="https://www.cnblogs.com/liunianfeiyu/rsd.xml">
+<link type="application/wlwmanifest+xml" rel="wlwmanifest" href="https://www.cnblogs.com/liunianfeiyu/wlwmanifest.xml">
+    <script async="" src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/analytics.js"></script><script type="text/javascript" src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/encoder.js"></script><script src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/jquery-2.js"></script>
+    <script>var currentBlogId=364453;var currentBlogApp='liunianfeiyu',cb_enable_mathjax=true;var isLogined=true;</script>
+    <script type="text/x-mathjax-config;executed=true">
+    MathJax.Hub.Config({
+        tex2jax: { inlineMath: [['$','$'], ['\\(','\\)']], processClass: 'math', processEscapes: true },
+        TeX: { 
+            equationNumbers: { autoNumber: ['AMS'], useLabelIds: true }, 
+            extensions: ['extpfeil.js'],
+            Macros: {bm: "\\boldsymbol"}
+        },
+        'HTML-CSS': { linebreaks: { automatic: true } },
+        SVG: { linebreaks: { automatic: true } }
+        });
+    </script><script src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/MathJax.js"></script>
+<script src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/blog-common.js" type="text/javascript"></script>
+<style type="text/css">.MathJax_Hover_Frame {border-radius: .25em; -webkit-border-radius: .25em; -moz-border-radius: .25em; -khtml-border-radius: .25em; box-shadow: 0px 0px 15px #83A; -webkit-box-shadow: 0px 0px 15px #83A; -moz-box-shadow: 0px 0px 15px #83A; -khtml-box-shadow: 0px 0px 15px #83A; border: 1px solid #A6D ! important; display: inline-block; position: absolute}
+.MathJax_Menu_Button .MathJax_Hover_Arrow {position: absolute; cursor: pointer; display: inline-block; border: 2px solid #AAA; border-radius: 4px; -webkit-border-radius: 4px; -moz-border-radius: 4px; -khtml-border-radius: 4px; font-family: 'Courier New',Courier; font-size: 9px; color: #F0F0F0}
+.MathJax_Menu_Button .MathJax_Hover_Arrow span {display: block; background-color: #AAA; border: 1px solid; border-radius: 3px; line-height: 0; padding: 4px}
+.MathJax_Hover_Arrow:hover {color: white!important; border: 2px solid #CCC!important}
+.MathJax_Hover_Arrow:hover span {background-color: #CCC!important}
+</style><style type="text/css">#MathJax_About {position: fixed; left: 50%; width: auto; text-align: center; border: 3px outset; padding: 1em 2em; background-color: #DDDDDD; color: black; cursor: default; font-family: message-box; font-size: 120%; font-style: normal; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; border-radius: 15px; -webkit-border-radius: 15px; -moz-border-radius: 15px; -khtml-border-radius: 15px; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+#MathJax_About.MathJax_MousePost {outline: none}
+.MathJax_Menu {position: absolute; background-color: white; color: black; width: auto; padding: 2px; border: 1px solid #CCCCCC; margin: 0; cursor: default; font: menu; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+.MathJax_MenuItem {padding: 2px 2em; background: transparent}
+.MathJax_MenuArrow {position: absolute; right: .5em; padding-top: .25em; color: #666666; font-size: .75em}
+.MathJax_MenuActive .MathJax_MenuArrow {color: white}
+.MathJax_MenuArrow.RTL {left: .5em; right: auto}
+.MathJax_MenuCheck {position: absolute; left: .7em}
+.MathJax_MenuCheck.RTL {right: .7em; left: auto}
+.MathJax_MenuRadioCheck {position: absolute; left: 1em}
+.MathJax_MenuRadioCheck.RTL {right: 1em; left: auto}
+.MathJax_MenuLabel {padding: 2px 2em 4px 1.33em; font-style: italic}
+.MathJax_MenuRule {border-top: 1px solid #CCCCCC; margin: 4px 1px 0px}
+.MathJax_MenuDisabled {color: GrayText}
+.MathJax_MenuActive {background-color: Highlight; color: HighlightText}
+.MathJax_MenuDisabled:focus, .MathJax_MenuLabel:focus {background-color: #E8E8E8}
+.MathJax_ContextMenu:focus {outline: none}
+.MathJax_ContextMenu .MathJax_MenuItem:focus {outline: none}
+#MathJax_AboutClose {top: .2em; right: .2em}
+.MathJax_Menu .MathJax_MenuClose {top: -10px; left: -10px}
+.MathJax_MenuClose {position: absolute; cursor: pointer; display: inline-block; border: 2px solid #AAA; border-radius: 18px; -webkit-border-radius: 18px; -moz-border-radius: 18px; -khtml-border-radius: 18px; font-family: 'Courier New',Courier; font-size: 24px; color: #F0F0F0}
+.MathJax_MenuClose span {display: block; background-color: #AAA; border: 1.5px solid; border-radius: 18px; -webkit-border-radius: 18px; -moz-border-radius: 18px; -khtml-border-radius: 18px; line-height: 0; padding: 8px 0 6px}
+.MathJax_MenuClose:hover {color: white!important; border: 2px solid #CCC!important}
+.MathJax_MenuClose:hover span {background-color: #CCC!important}
+.MathJax_MenuClose:hover:focus {outline: none}
+</style><style type="text/css">.MathJax_Preview .MJXf-math {color: inherit!important}
+</style><style type="text/css">.MJX_Assistive_MathML {position: absolute!important; top: 0; left: 0; clip: rect(1px, 1px, 1px, 1px); padding: 1px 0 0 0!important; border: 0!important; height: 1px!important; width: 1px!important; overflow: hidden!important; display: block!important; -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none}
+.MJX_Assistive_MathML.MJX_Assistive_MathML_Block {width: 100%!important}
+</style><style type="text/css">#MathJax_Zoom {position: absolute; background-color: #F0F0F0; overflow: auto; display: block; z-index: 301; padding: .5em; border: 1px solid black; margin: 0; font-weight: normal; font-style: normal; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; -webkit-box-sizing: content-box; -moz-box-sizing: content-box; box-sizing: content-box; box-shadow: 5px 5px 15px #AAAAAA; -webkit-box-shadow: 5px 5px 15px #AAAAAA; -moz-box-shadow: 5px 5px 15px #AAAAAA; -khtml-box-shadow: 5px 5px 15px #AAAAAA; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+#MathJax_ZoomOverlay {position: absolute; left: 0; top: 0; z-index: 300; display: inline-block; width: 100%; height: 100%; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+#MathJax_ZoomFrame {position: relative; display: inline-block; height: 0; width: 0}
+#MathJax_ZoomEventTrap {position: absolute; left: 0; top: 0; z-index: 302; display: inline-block; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+</style><style type="text/css">.MathJax_Preview {color: #888}
+#MathJax_Message {position: fixed; left: 1px; bottom: 2px; background-color: #E6E6E6; border: 1px solid #959595; margin: 0px; padding: 2px 8px; z-index: 102; color: black; font-size: 80%; width: auto; white-space: nowrap}
+#MathJax_MSIE_Frame {position: absolute; top: 0; left: 0; width: 0px; z-index: 101; border: 0px; margin: 0px; padding: 0px}
+.MathJax_Error {color: #CC0000; font-style: italic}
+</style><style type="text/css">.MJXp-script {font-size: .8em}
+.MJXp-right {-webkit-transform-origin: right; -moz-transform-origin: right; -ms-transform-origin: right; -o-transform-origin: right; transform-origin: right}
+.MJXp-bold {font-weight: bold}
+.MJXp-italic {font-style: italic}
+.MJXp-scr {font-family: MathJax_Script,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-frak {font-family: MathJax_Fraktur,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-sf {font-family: MathJax_SansSerif,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-cal {font-family: MathJax_Caligraphic,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-mono {font-family: MathJax_Typewriter,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-largeop {font-size: 150%}
+.MJXp-largeop.MJXp-int {vertical-align: -.2em}
+.MJXp-math {display: inline-block; line-height: 1.2; text-indent: 0; font-family: 'Times New Roman',Times,STIXGeneral,serif; white-space: nowrap; border-collapse: collapse}
+.MJXp-display {display: block; text-align: center; margin: 1em 0}
+.MJXp-math span {display: inline-block}
+.MJXp-box {display: block!important; text-align: center}
+.MJXp-box:after {content: " "}
+.MJXp-rule {display: block!important; margin-top: .1em}
+.MJXp-char {display: block!important}
+.MJXp-mo {margin: 0 .15em}
+.MJXp-mfrac {margin: 0 .125em; vertical-align: .25em}
+.MJXp-denom {display: inline-table!important; width: 100%}
+.MJXp-denom > * {display: table-row!important}
+.MJXp-surd {vertical-align: top}
+.MJXp-surd > * {display: block!important}
+.MJXp-script-box > *  {display: table!important; height: 50%}
+.MJXp-script-box > * > * {display: table-cell!important; vertical-align: top}
+.MJXp-script-box > *:last-child > * {vertical-align: bottom}
+.MJXp-script-box > * > * > * {display: block!important}
+.MJXp-mphantom {visibility: hidden}
+.MJXp-munderover {display: inline-table!important}
+.MJXp-over {display: inline-block!important; text-align: center}
+.MJXp-over > * {display: block!important}
+.MJXp-munderover > * {display: table-row!important}
+.MJXp-mtable {vertical-align: .25em; margin: 0 .125em}
+.MJXp-mtable > * {display: inline-table!important; vertical-align: middle}
+.MJXp-mtr {display: table-row!important}
+.MJXp-mtd {display: table-cell!important; text-align: center; padding: .5em 0 0 .5em}
+.MJXp-mtr > .MJXp-mtd:first-child {padding-left: 0}
+.MJXp-mtr:first-child > .MJXp-mtd {padding-top: 0}
+.MJXp-mlabeledtr {display: table-row!important}
+.MJXp-mlabeledtr > .MJXp-mtd:first-child {padding-left: 0}
+.MJXp-mlabeledtr:first-child > .MJXp-mtd {padding-top: 0}
+.MJXp-merror {background-color: #FFFF88; color: #CC0000; border: 1px solid #CC0000; padding: 1px 3px; font-style: normal; font-size: 90%}
+.MJXp-scale0 {-webkit-transform: scaleX(.0); -moz-transform: scaleX(.0); -ms-transform: scaleX(.0); -o-transform: scaleX(.0); transform: scaleX(.0)}
+.MJXp-scale1 {-webkit-transform: scaleX(.1); -moz-transform: scaleX(.1); -ms-transform: scaleX(.1); -o-transform: scaleX(.1); transform: scaleX(.1)}
+.MJXp-scale2 {-webkit-transform: scaleX(.2); -moz-transform: scaleX(.2); -ms-transform: scaleX(.2); -o-transform: scaleX(.2); transform: scaleX(.2)}
+.MJXp-scale3 {-webkit-transform: scaleX(.3); -moz-transform: scaleX(.3); -ms-transform: scaleX(.3); -o-transform: scaleX(.3); transform: scaleX(.3)}
+.MJXp-scale4 {-webkit-transform: scaleX(.4); -moz-transform: scaleX(.4); -ms-transform: scaleX(.4); -o-transform: scaleX(.4); transform: scaleX(.4)}
+.MJXp-scale5 {-webkit-transform: scaleX(.5); -moz-transform: scaleX(.5); -ms-transform: scaleX(.5); -o-transform: scaleX(.5); transform: scaleX(.5)}
+.MJXp-scale6 {-webkit-transform: scaleX(.6); -moz-transform: scaleX(.6); -ms-transform: scaleX(.6); -o-transform: scaleX(.6); transform: scaleX(.6)}
+.MJXp-scale7 {-webkit-transform: scaleX(.7); -moz-transform: scaleX(.7); -ms-transform: scaleX(.7); -o-transform: scaleX(.7); transform: scaleX(.7)}
+.MJXp-scale8 {-webkit-transform: scaleX(.8); -moz-transform: scaleX(.8); -ms-transform: scaleX(.8); -o-transform: scaleX(.8); transform: scaleX(.8)}
+.MJXp-scale9 {-webkit-transform: scaleX(.9); -moz-transform: scaleX(.9); -ms-transform: scaleX(.9); -o-transform: scaleX(.9); transform: scaleX(.9)}
+.MathJax_PHTML .noError {vertical-align: ; font-size: 90%; text-align: left; color: black; padding: 1px 3px; border: 1px solid}
+</style></head>
+<body><div id="MathJax_Message" style="display: none;"></div>
+<a name="top"></a>
+
+
+<!--done-->
+<div id="header">
+	
+<!--done-->
+<div class="header">
+	<div class="headerText">
+		<a id="Header1_HeaderTitle" class="headermaintitle" href="https://www.cnblogs.com/liunianfeiyu/">流年飞雨</a><br>
+		人是很难改变的，当你看清自己，也许那就是一辈子的你；人是可以改变的，只是要加倍用力，直到不再认识自己。
+	</div>
+</div>
+
+</div>
+<div id="mylinks">
+<!--done-->
+<a id="blog_nav_sitehome" class="menu" href="https://www.cnblogs.com/">博客园</a>&nbsp;&nbsp;&nbsp;
+<a id="blog_nav_myhome" class="menu" href="https://www.cnblogs.com/liunianfeiyu/">首页</a>&nbsp;&nbsp;&nbsp;
+<a id="blog_nav_newpost" class="menu" rel="nofollow" href="https://i.cnblogs.com/EditPosts.aspx?opt=1">新随笔</a>&nbsp;&nbsp;&nbsp;
+<a id="blog_nav_contact" accesskey="9" class="menu" rel="nofollow" href="https://msg.cnblogs.com/send/%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8">联系</a>&nbsp;&nbsp;&nbsp;
+<a id="blog_nav_rss" class="menu" href="https://www.cnblogs.com/liunianfeiyu/rss">订阅</a><a id="blog_nav_rss_image" href="https://www.cnblogs.com/liunianfeiyu/rss"><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/xml.gif" alt="订阅"></a>&nbsp;&nbsp;&nbsp;
+<a id="blog_nav_admin" class="menu" rel="nofollow" href="https://i.cnblogs.com/">管理</a>
+</div>
+<div id="mytopmenu">
+	
+		<div id="blog_stats">
+<div class="blogStats">随笔 - 156&nbsp;
+文章 - 22&nbsp;评论 - 13&nbsp;trackbacks - 0
+</div></div>
+	
+</div>
+<div id="leftcontent">
+	
+		<div id="leftcontentcontainer">
+			<div id="blog-calendar" style=""><table id="blogCalendar" class="Cal" title="Calendar" cellspacing="0" cellpadding="0">
+	<tbody><tr><td colspan="7"><table class="CalTitle" cellspacing="0">
+		<tbody><tr><td class="CalNextPrev"><a href="javascript:void(0);" onclick="loadBlogCalendar('2019/03/01');return false;">&lt;</a></td><td align="center">2019年4月</td><td class="CalNextPrev" align="right"><a href="javascript:void(0);" onclick="loadBlogCalendar('2019/05/01');return false;">&gt;</a></td></tr>
+	</tbody></table></td></tr><tr><th class="CalDayHeader" abbr="日" scope="col" align="center">日</th><th class="CalDayHeader" abbr="一" scope="col" align="center">一</th><th class="CalDayHeader" abbr="二" scope="col" align="center">二</th><th class="CalDayHeader" abbr="三" scope="col" align="center">三</th><th class="CalDayHeader" abbr="四" scope="col" align="center">四</th><th class="CalDayHeader" abbr="五" scope="col" align="center">五</th><th class="CalDayHeader" abbr="六" scope="col" align="center">六</th></tr><tr><td class="CalOtherMonthDay" align="center">31</td><td align="center">1</td><td align="center">2</td><td align="center">3</td><td align="center"><a href="https://www.cnblogs.com/liunianfeiyu/archive/2019/04/04.html"><u>4</u></a></td><td class="CalTodayDay" align="center">5</td><td class="CalWeekendDay" align="center">6</td></tr><tr><td class="CalWeekendDay" align="center">7</td><td align="center">8</td><td align="center">9</td><td align="center">10</td><td align="center">11</td><td align="center">12</td><td class="CalWeekendDay" align="center">13</td></tr><tr><td class="CalWeekendDay" align="center">14</td><td align="center">15</td><td align="center">16</td><td align="center">17</td><td align="center">18</td><td align="center">19</td><td class="CalWeekendDay" align="center">20</td></tr><tr><td class="CalWeekendDay" align="center">21</td><td align="center">22</td><td align="center">23</td><td align="center">24</td><td align="center">25</td><td align="center">26</td><td class="CalWeekendDay" align="center">27</td></tr><tr><td class="CalWeekendDay" align="center">28</td><td align="center">29</td><td align="center">30</td><td class="CalOtherMonthDay" align="center">1</td><td class="CalOtherMonthDay" align="center">2</td><td class="CalOtherMonthDay" align="center">3</td><td class="CalOtherMonthDay" align="center">4</td></tr><tr><td class="CalOtherMonthDay" align="center">5</td><td class="CalOtherMonthDay" align="center">6</td><td class="CalOtherMonthDay" align="center">7</td><td class="CalOtherMonthDay" align="center">8</td><td class="CalOtherMonthDay" align="center">9</td><td class="CalOtherMonthDay" align="center">10</td><td class="CalOtherMonthDay" align="center">11</td></tr>
+</tbody></table></div><script type="text/javascript">loadBlogDefaultCalendar();</script><br>
+			
+<!--done-->
+<div class="newsItem">
+	<div id="blog-news"><div id="profile_block">昵称：<a href="https://home.cnblogs.com/u/liunianfeiyu/">流年飞雨</a><br>园龄：<a href="https://home.cnblogs.com/u/liunianfeiyu/" title="入园时间：2017-07-01">1年9个月</a><br>粉丝：<a href="https://home.cnblogs.com/u/liunianfeiyu/followers/">12</a><br>关注：<a href="https://home.cnblogs.com/u/liunianfeiyu/followees/">28</a><div id="p_b_follow"></div><script>getFollowStatus('f22ce207-f29f-4312-ffd1-08d49c352df2')</script></div></div><script type="text/javascript">loadBlogNews();</script>
+</div>
+
+			<div id="blog-sidecolumn"><div id="sidebar_search" class="sidebar-block">
+<div id="sidebar_search" class="mySearch">
+<h3 class="catListTitle">搜索</h3>
+<div id="sidebar_search_box">
+<div id="widget_my_zzk" class="div_my_zzk"><input type="text" id="q" onkeydown="return zzk_go_enter(event);" class="input_my_zzk">&nbsp;<input onclick="zzk_go()" type="button" value="找找看" id="btnZzk" class="btn_my_zzk"></div>
+
+</div>
+</div>
+
+</div><div id="sidebar_shortcut" class="sidebar-block">
+<h3 class="catListTitle">常用链接</h3>
+<ul>
+<li><a href="https://www.cnblogs.com/liunianfeiyu/p/" title="我的博客的随笔列表">我的随笔</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/MyComments.html" title="我发表过的评论列表">我的评论</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/OtherPosts.html" title="我评论过的随笔列表">我的参与</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/RecentComments.html" title="我的博客的评论列表">最新评论</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/tag/" title="我的博客的标签列表">我的标签</a></li>
+</ul>
+<div id="itemListLin_con" style="display:none;">
+
+</div></div><div id="sidebar_recentposts" class="sidebar-block">
+<h3 class="catListTitle">最新随笔</h3>
+<div class="RecentComment" id="RecentPosts">
+<ul style="word-break:break-all">
+<li><a href="https://www.cnblogs.com/liunianfeiyu/p/10652667.html">1. Servlet学习记录2</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/10630084.html">2. Servlet学习记录1</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/10572688.html">3. JS里的&lt;!-- //--&gt; 注释有什么作用</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/10469496.html">4. ArrayList的addAll方法</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/10357082.html">5. 尚硅谷springboot学习36-自定义starter</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/10357068.html">6. 尚硅谷springboot学习35-启动原理</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/10357046.html">7. 尚硅谷springboot学习34-整合SpringData JPA</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/10357012.html">8. 尚硅谷springboot学习33-整合mybatis</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/10357000.html">9. 尚硅谷springboot学习32-整合druid</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/10356974.html">10. 尚硅谷springboot学习31-jdbc数据连接</a></li>
+</ul>
+</div>
+</div><div id="sidebar_toptags" class="sidebar-block">
+<h3 class="catListTitle">我的标签</h3>
+<div id="MyTag">
+<ul>
+<li><a href="https://www.cnblogs.com/liunianfeiyu/tag/hibernate%20%E7%BB%A7%E6%89%BF/">hibernate 继承</a>(1)</li><li><a href="https://www.cnblogs.com/liunianfeiyu/tag/%E6%96%87%E5%8C%96%20%E4%BA%BA%E7%94%9F%20%E6%95%99%E8%82%B2%20%E4%BD%9B%E5%AD%A6/">文化 人生 教育 佛学</a>(1)</li>
+</ul>
+</div></div><div id="sidebar_myteams" class="sidebar-block"></div><div id="sidebar_categories">
+<!--done-->
+
+		<h1 class="catListTitle">随笔分类<span style="font-size:11px;font-weight:normal">(164)</span></h1>
+		
+				<ul class="catList">
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_0" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1433222.html">book：java web整合开发王者归来(9)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_1" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1027293.html">css</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_2" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1027296.html">database(1)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_3" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1027294.html">html5(1)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_4" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1027292.html">java(14)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_5" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1027297.html">javaweb(11)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_6" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1027295.html">js/jquery(3)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_7" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1222878.html">linux(1)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_8" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1339581.html">mongodb(14)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_9" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1369690.html">redis(12)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_10" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1395091.html">springboot(36)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_11" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1395041.html">springmvc(3)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_12" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1039161.html">struts2(1)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_13" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1395040.html">webservice(6)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_14" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1342623.html">xml(1)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_15" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1280792.html">软考(14)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_16" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1359466.html">设计模式(22)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_17" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1162395.html">生，活，生活(1)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_18" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1313699.html">算法(3)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_19" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1358929.html">小知识(6)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_20" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1027299.html">心晴 心阴 心雨 心雪(5)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_0_Link_21" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1162389.html">最近阅读</a></li>
+			
+				</ul>
+			
+	
+		<h1 class="catListTitle">随笔档案<span style="font-size:11px;font-weight:normal">(156)</span></h1>
+		
+				<ul class="catList">
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_0" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2019/04.html">2019年4月 (1)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_1" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2019/03.html">2019年3月 (3)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_2" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2019/02.html">2019年2月 (37)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_3" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2019/01.html">2019年1月 (12)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_4" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2018/12.html">2018年12月 (44)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_5" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2018/11.html">2018年11月 (12)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_6" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2018/10.html">2018年10月 (6)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_7" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2018/08.html">2018年8月 (5)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_8" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2018/07.html">2018年7月 (1)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_9" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2018/06.html">2018年6月 (2)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_10" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2018/05.html">2018年5月 (1)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_11" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2018/04.html">2018年4月 (3)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_12" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2018/03.html">2018年3月 (3)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_13" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2018/02.html">2018年2月 (11)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_14" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2018/01.html">2018年1月 (1)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_15" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2017/12.html">2017年12月 (2)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_16" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2017/11.html">2017年11月 (2)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_17" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2017/09.html">2017年9月 (1)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_18" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2017/08.html">2017年8月 (8)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_1_Link_19" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archive/2017/07.html">2017年7月 (1)</a></li>
+			
+				</ul>
+			
+	
+		<h1 class="catListTitle">文章分类<span style="font-size:11px;font-weight:normal">(20)</span></h1>
+		
+				<ul class="catList">
+			
+				<li class="catListItem"> <a id="CatList_LinkList_2_Link_0" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1239668.html">工作学习(13)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_2_Link_1" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/category/1162396.html">平凡的世界(7)</a></li>
+			
+				</ul>
+			
+	
+		<h1 class="catListTitle">文章档案<span style="font-size:11px;font-weight:normal">(22)</span></h1>
+		
+				<ul class="catList">
+			
+				<li class="catListItem"> <a id="CatList_LinkList_3_Link_0" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archives/2019/01.html" rel="nofollow">2019年1月 (5)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_3_Link_1" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archives/2018/12.html" rel="nofollow">2018年12月 (4)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_3_Link_2" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archives/2018/11.html" rel="nofollow">2018年11月 (1)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_3_Link_3" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archives/2018/10.html" rel="nofollow">2018年10月 (2)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_3_Link_4" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archives/2018/09.html" rel="nofollow">2018年9月 (1)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_3_Link_5" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archives/2018/07.html" rel="nofollow">2018年7月 (2)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_3_Link_6" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archives/2018/06.html" rel="nofollow">2018年6月 (5)</a></li>
+			
+				<li class="catListItem"> <a id="CatList_LinkList_3_Link_7" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/archives/2018/02.html" rel="nofollow">2018年2月 (2)</a></li>
+			
+				</ul>
+			
+	
+		<h1 class="catListTitle">相册<span style="font-size:11px;font-weight:normal">(1)</span></h1>
+		
+				<ul class="catList">
+			
+				<li class="catListItem"> <a id="CatList_LinkList_4_Link_0" class="listitem" href="https://www.cnblogs.com/liunianfeiyu/gallery/1158899.html" rel="nofollow">技术图片(1)</a></li>
+			
+				</ul>
+			
+	
+</div><div id="sidebar_scorerank" class="sidebar-block">
+<h3>积分与排名</h3>
+<ul>
+	<li>
+		积分 -
+		9057
+	</li><li>
+		排名 -
+		52199
+	</li>
+</ul>
+</div><div id="sidebar_recentcomments" class="sidebar-block"><div id="recent_comments_wrap">
+<h3 class="catListTitle">最新评论</h3>
+<div class="RecentComment" id="RecentComments">
+	<div id="RecentCommentsBlock"><ul>
+        <li class="recent_comment_title"><a href="https://www.cnblogs.com/liunianfeiyu/articles/9196931.html#4000441">1. Re:牛叔说电影-社会底层是怎样炼成的</a></li>
+        <li class="recent_comment_body">这次又被牛叔洗脑了，怎么谁都可以来给我洗脑</li>
+        <li class="recent_comment_author">--因情雨血</li>
+        <li class="recent_comment_title"><a href="https://www.cnblogs.com/liunianfeiyu/p/8495478.html#3914209">2. Re:深喉，强奸2-制服诱惑，活着，从你的全世界路过</a></li>
+        <li class="recent_comment_body">坚持10点前睡觉，从明天开始</li>
+        <li class="recent_comment_author">--一座城你说你不懂</li>
+        <li class="recent_comment_title"><a href="https://www.cnblogs.com/liunianfeiyu/p/7215346.html#3914172">3. Re:尚硅谷STRUTS2视频学习笔记</a></li>
+        <li class="recent_comment_body">@聊寂园我大学都没学啥东西，还搞得死去活来的...</li>
+        <li class="recent_comment_author">--一座城你说你不懂</li>
+        <li class="recent_comment_title"><a href="https://www.cnblogs.com/liunianfeiyu/p/7215346.html#3909037">4. Re:尚硅谷STRUTS2视频学习笔记</a></li>
+        <li class="recent_comment_body">@一座城你说你不懂我这是一起复习了，大三了，才想起开个博客积攒点知识...</li>
+        <li class="recent_comment_author">--聊寂园</li>
+        <li class="recent_comment_title"><a href="https://www.cnblogs.com/liunianfeiyu/p/7215346.html#3909017">5. Re:尚硅谷STRUTS2视频学习笔记</a></li>
+        <li class="recent_comment_body">@聊寂园看了你的博客，你c++，java一起学的呀，感觉怎么样...</li>
+        <li class="recent_comment_author">--一座城你说你不懂</li>
+</ul>
+</div>
+</div>
+</div></div><div id="sidebar_topviewedposts" class="sidebar-block"><div id="topview_posts_wrap">
+<h3 class="catListTitle">阅读排行榜</h3>
+<div class="RecentComment" id="TopViewPosts"> 
+	<div id="TopViewPostsBlock"><ul><li><a href="https://www.cnblogs.com/liunianfeiyu/p/7353064.html">1. ECLIPSE修改xml配置文件TOMCAT不生效的解决(2449)</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/7266466.html">2. Enum学习中的compareTo方法分析(990)</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/7215346.html">3. 尚硅谷STRUTS2视频学习笔记(770)</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/7868779.html">4. jdk5新特性(316)</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/8909869.html">5. XML学习记录1-复习SAX，DOM和JAXB(190)</a></li></ul></div>
+</div>
+</div></div><div id="sidebar_topcommentedposts" class="sidebar-block"><div id="topfeedback_posts_wrap">
+<h3 class="catListTitle">评论排行榜</h3>
+<div class="RecentComment" id="TopCommentsPosts">
+	<div id="TopFeedbackPostsBlock"><ul><li><a href="https://www.cnblogs.com/liunianfeiyu/p/7215346.html">1. 尚硅谷STRUTS2视频学习笔记(5)</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/8428520.html">2. JAVA WEB开发中的会话跟踪(1)</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/8428335.html">3. JAVA WEB开发中的资源国际化(1)</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/7281548.html">4. JSP学习记录(1)</a></li></ul></div>
+</div></div></div><div id="sidebar_topdiggedposts" class="sidebar-block"><div id="topdigg_posts_wrap">
+<h3 class="catListTitle">推荐排行榜</h3>
+<div class="RecentComment">
+	<div id="TopDiggPostsBlock"><ul><li><a href="https://www.cnblogs.com/liunianfeiyu/p/7215346.html">1. 尚硅谷STRUTS2视频学习笔记(1)</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/9748239.html">2. 有向无环带权图的最短路径及长度(1)</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/9747519.html">3. 拓扑排序获取所有可能序列JAVA实现(1)</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/9542780.html">4. 查询后经过后台处理的数据的分页显示(1)</a></li><li><a href="https://www.cnblogs.com/liunianfeiyu/p/9434051.html">5. 原生js实现三级复选框(1)</a></li></ul></div>
+</div></div></div></div><script type="text/javascript">loadBlogSideColumn();</script></div>		
+	
+</div>
+<div id="centercontent">
+	
+        <div id="post_detail">
+<!--done-->
+<div class="post">
+	<div class="postTitle">
+		<h1><a id="cb_post_title_url" class="postTitle2" href="https://www.cnblogs.com/liunianfeiyu/p/8797017.html">JAVA NIO学习记录1-buffer和channel</a></h1>
+	</div>
+	<div id="cnblogs_post_body" class="blogpost-body"><p>&nbsp;&nbsp; 　<span style="font-size: 15px; color: #008000;"><strong> 什么是NIO？</strong></span></p>
+<p>　　Java NIO（New IO）是从Java 1.4版本开始引入的一个新的IO API，可以替代标准的Java IO 
+API。NIO与原来的IO有同样的作用和目的，但是使用的方式完全不同，NIO支持面向缓冲区的、基于通道的IO操作。NIO将以更加高效的方式进行文
+件的读写操作。</p>
+<p>　　<span style="color: #000000; font-size: 14px;">Java NIO 与IO 的主要区别</span></p>
+<p><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/1192089-20180411223600818-266496158.png" alt=""></p>
+<p>　　Java NIO系统的核心在于：通道(Channel)和缓冲区(Buffer)。通道表示打开到IO 
+设备(例如：文件、套接字)的连接。若需要使用NIO 系统，需要获取用于连接IO 
+设备的通道以及用于容纳数据的缓冲区。然后操作缓冲区，对数据进行处理。简而言之，Channel 负责传输，Buffer 负责存储</p>
+<p>　　<span style="font-size: 15px;"><strong><span style="color: #008000;">缓冲区（Buffer）</span></strong></span></p>
+<p>　　一个用于特定基本数据类型的容器。由java.nio 包定义的，所有缓冲区都是Buffer 抽象类的子类。Java NIO中的Buffer 主要用于与NIO 通道进行交互，数据是从通道读入缓冲区，从缓冲区写入通道中的。</p>
+<p>　　Buffer 就像一个数组，可以保存多个相同类型的数据。根据数据类型不同(boolean 除外) ，有以下Buffer 常用子类：</p>
+<ul>
+<li>ByteBuffer</li>
+<li>CharBuffer</li>
+<li>ShortBuffer</li>
+<li>IntBuffer</li>
+<li>LongBuffer</li>
+<li>FloatBuffer</li>
+<li>DoubleBuffer</li>
+</ul>
+<p>　　上述Buffer 类他们都采用相似的方法进行管理数据，只是各自管理的数据类型不同而已。都是通过如下方法获取一个Buffer 对象：<br>　　static XxxBuffer allocate(int capacity) : 创建一个容量为capacity 的XxxBuffer 对象</p>
+<p>　　<span style="color: #008080;">Buffer 中的重要概念</span>：</p>
+<ul>
+<li>容量(capacity) ：表示Buffer 最大数据容量，缓冲区容量不能为负，并且创建后不能更改。</li>
+<li>限制(limit)：第一个不应该读取或写入的数据的索引，即位于limit 后的数据不可读写。缓冲区的限制不能为负，并且不能大于其容量。</li>
+<li>位置(position)：下一个要读取或写入的数据的索引。缓冲区的位置不能为负，并且不能大于其限制</li>
+<li>标记(mark)与重置(reset)：标记是一个索引，通过Buffer 中的mark() 方法指定Buffer 中一个特定的position，之后可以通过调用reset() 方法恢复到这个position.</li>
+
+
+
+
+
+
+
+
+
+
+
+
+</ul>
+<p>　　标记、位置、限制、容量遵守以下不变式：0&lt;=mark&lt;=position&lt;=limit&lt;=capacity</p>
+<p>　　缓冲区的基本属性</p>
+<p><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/1192089-20180411224059676-950834001.png" alt=""></p>
+<p>　　<span style="color: #008080;">Buffer 的常用方法</span></p>
+<p>　　方法/描述<br>　　Bufferclear()<br>　　清空缓冲区并返回对缓冲区的引用<br>　　Buffer flip()<br>　　将缓冲区的界限设置为当前位置，并将当前位置充值为0<br>　　int capacity()<br>　　返回Buffer 的capacity大小<br>　　boolean hasRemaining()<br>　　判断缓冲区中是否还有元素<br>　　int limit()<br>　　返回Buffer 的界限(limit) 的位置<br>　　Bufferlimit(int n)<br>　　将设置缓冲区界限为n, 并返回一个具有新limit 的缓冲区对象<br>　　Buffer mark()<br>　　对缓冲区设置标记<br>　　int position()<br>　　返回缓冲区的当前位置position<br>　　Buffer position(int n)<br>　　将设置缓冲区的当前位置为n , 并返回修改后的Buffer 对象<br>　　int remaining()<br>　　返回position 和limit 之间的元素个数<br>　　Buffer reset()<br>　　将位置position 转到以前设置的mark 所在的位置<br>　　Buffer rewind()<br>　　将位置设为为0，取消设置的mark</p>
+<p>　　Buffer 所有子类提供了两个用于数据操作的方法：get() 与put() 方法</p>
+<p>　　获取Buffer 中的数据<br>　　get() ：读取单个字节<br>　　get(byte[] dst)：批量读取多个字节到dst 中<br>　　get(int index)：读取指定索引位置的字节(不会移动position)</p>
+<p>　　放入数据到Buffer 中<br>　　put(byte b)：将给定单个字节写入缓冲区的当前位置<br>　　put(byte[] src)：将src 中的字节写入缓冲区的当前位置<br>　　put(int index, byte b)：将指定字节写入缓冲区的索引位置(不会移动position)</p>
+<p>　　<span style="color: #008080;">直接与非直接缓冲区</span></p>
+<p>　　字节缓冲区要么是直接的，要么是非直接的。如果为直接字节缓冲区，则Java 虚拟机会尽最大努力直接在此缓冲区上执行本机I/O 
+操作。也就是说，在每次调用基础操作系统的一个本机I/O 
+操作之前（或之后），虚拟机都会尽量避免将缓冲区的内容复制到中间缓冲区中（或从中间缓冲区中复制内容）。<br>　　直接字节缓冲区可以通过调用此类的
+allocateDirect() 
+工厂方法来创建。此方法返回的缓冲区进行分配和取消分配所需成本通常高于非直接缓冲区。直接缓冲区的内容可以驻留在常规的垃圾回收堆之外，因此，它们对应
+用程序的内存需求量造成的影响可能并不明显。所以，建议将直接缓冲区主要分配给那些易受基础系统的本机I/O 
+操作影响的大型、持久的缓冲区。一般情况下，最好仅在直接缓冲区能在程序性能方面带来明显好处时分配它们。<br>　　直接字节缓冲区还可以通过
+FileChannel 的map() 方法将文件区域直接映射到内存中来创建。该方法返回MappedByteBuffer。Java 
+平台的实现有助于通过JNI 
+从本机代码创建直接字节缓冲区。如果以上这些缓冲区中的某个缓冲区实例指的是不可访问的内存区域，则试图访问该区域不会更改该缓冲区的内容，并且将会在访
+问期间或稍后的某个时间导致抛出不确定的异常。<br>　　字节缓冲区是直接缓冲区还是非直接缓冲区可通过调用其isDirect()方法来确定。提供此方法是为了能够在性能关键型代码中执行显式缓冲区管理。</p>
+<p>　　非直接缓冲区</p>
+<p><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/1192089-20180411224514770-1512129551.png" alt=""></p>
+<p>　　直接缓冲区</p>
+<p>　　<img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/1192089-20180411224534900-1955651842.png" alt=""></p>
+<p>　　<span style="font-size: 15px;"><strong><span style="color: #008000;">通道（Channel）</span></strong></span></p>
+<p>　　通道（Channel）：由java.nio.channels 包定义的。Channel 表示IO 源与目标打开的连接。Channel 类似于传统的“流”。只不过Channel 本身不能直接访问数据，Channel 只能与Buffer 进行交互。</p>
+<p>　　<img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/1192089-20180411224608821-1236991222.png" alt=""></p>
+<p>　　<span style="color: #008080;">Java 为Channel 接口提供的最主要实现类如下：</span></p>
+<ul>
+<li>FileChannel：用于读取、写入、映射和操作文件的通道。</li>
+<li>DatagramChannel：通过UDP 读写网络中的数据通道。</li>
+<li>SocketChannel：通过TCP 读写网络中的数据。</li>
+<li>ServerSocketChannel：可以监听新进来的TCP 连接，对每一个新进来的连接都会创建一个SocketChannel。</li>
+
+
+
+
+
+
+
+
+</ul>
+<p>　　<span style="color: #008080;">获取通道的一种方式是对支持通道的对象调用getChannel() 方法</span>。支持通道的类如下：</p>
+<ul>
+<li>FileInputStream</li>
+<li>FileOutputStream</li>
+<li>RandomAccessFile</li>
+<li>DatagramSocket</li>
+<li>Socket</li>
+<li>ServerSocket</li>
+
+
+
+
+
+
+
+
+</ul>
+<p>　　<span style="color: #008080;">获取通道的其他方式是使用Files 类的静态方法newByteChannel() 获取字节通道。或者通过通道的静态方法open() 打开并返回指定通道。</span></p>
+<p>　　通道的数据传输</p>
+<p>　　将Buffer 中数据写入Channel</p>
+<p><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/1192089-20180411224837155-2105665655.png" alt=""></p>
+<p>　　从Channel 读取数据到Buffer</p>
+<p>　　<img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/1192089-20180411224850139-766014536.png" alt=""></p>
+<p>　　<span style="color: #008080; font-size: 14px;">分散(Scatter)和聚集(Gather)</span><br>　　分散读取（Scattering Reads）是指从Channel 中读取的数据“分散”到多个Buffer 中。</p>
+<p>　　<img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/1192089-20180411224919862-801262929.png" alt=""></p>
+<p>　　注意：按照缓冲区的顺序，从Channel 中读取的数据依次将Buffer 填满。</p>
+<p>　　聚集写入（Gathering Writes）是指将多个Buffer 中的数据“聚集”到Channel。</p>
+<p><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/1192089-20180411224941398-1944106295.png" alt=""></p>
+<p>　　注意：按照缓冲区的顺序，写入position 和limit 之间的数据到Channel 。</p>
+<p>　　<span style="color: #008080;">transferFrom()</span>将数据从源通道传输到其他Channel 中：</p>
+<p>　　　　<img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/1192089-20180411225018226-839970968.png" alt="" width="994" height="396"></p>
+<p>　　<span style="color: #008080;">transferTo()</span>将数据从源通道传输到其他Channel 中：</p>
+<p>　　<img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/1192089-20180411225100755-1161983826.png" alt="" width="1001" height="429"></p>
+<p>　　<span style="color: #008080;">FileChannel 的常用方法</span><br>　　方法/描述<br>　　int read(ByteBuffer dst)<br>　　从Channel 中读取数据到ByteBuffer<br>　　long read(ByteBuffer[] dsts)<br>　　将Channel 中的数据“分散”到ByteBuffer[]<br>　　int write(ByteBuffer src)<br>　　将ByteBuffer 中的数据写入到Channel<br>　　long write(ByteBuffer[] srcs)<br>　　将ByteBuffer[] 中的数据“聚集”到Channel<br>　　long position()<br>　　返回此通道的文件位置<br>　　FileChannel position(long p)<br>　　设置此通道的文件位置<br>　　long size()<br>　　返回此通道的文件的当前大小<br>　　FileChannel truncate(long s)<br>　　将此通道的文件截取为给定大小<br>　　void force(boolean metaData)<br>　　强制将所有对此通道的文件更新写入到存储设备中</p>
+<p>　　<span style="font-size: 15px;"><strong><span style="color: #008000;">代码分析</span></strong></span></p>
+<p><span style="font-size: 15px;"><strong><span style="color: #008000;">　　</span></strong><span style="color: #008080;">TestBuffer类</span></span></p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="color: #0000ff;">package</span><span style="color: #000000;"> com.atguigu.nio;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.ByteBuffer;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> org.junit.Test;
+
+</span><span style="color: #008000;">/*</span><span style="color: #008000;">
+ * 一、缓冲区（Buffer）：在 Java NIO 中负责数据的存取。缓冲区就是数组。用于存储不同数据类型的数据
+ * 
+ * 根据数据类型不同（boolean 除外），提供了相应类型的缓冲区：
+ * ByteBuffer
+ * CharBuffer
+ * ShortBuffer
+ * IntBuffer
+ * LongBuffer
+ * FloatBuffer
+ * DoubleBuffer
+ * 
+ * 上述缓冲区的管理方式几乎一致，通过 allocate() 获取缓冲区
+ * 
+ * 二、缓冲区存取数据的两个核心方法：
+ * put() : 存入数据到缓冲区中
+ * get() : 获取缓冲区中的数据
+ * 
+ * 三、缓冲区中的四个核心属性：
+ * capacity : 容量，表示缓冲区中最大存储数据的容量。一旦声明不能改变。
+ * limit : 界限，表示缓冲区中可以操作数据的大小。（limit 后数据不能进行读写）
+ * position : 位置，表示缓冲区中正在操作数据的位置。
+ * 
+ * mark : 标记，表示记录当前 position 的位置。可以通过 reset() 恢复到 mark 的位置
+ * 
+ * 0 &lt;= mark &lt;= position &lt;= limit &lt;= capacity
+ * 
+ * 四、直接缓冲区与非直接缓冲区：
+ * 非直接缓冲区：通过 allocate() 方法分配缓冲区，将缓冲区建立在 JVM 的内存中
+ * 直接缓冲区：通过 allocateDirect() 方法分配直接缓冲区，将缓冲区建立在物理内存中。可以提高效率
+ </span><span style="color: #008000;">*/</span>
+<span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> TestBuffer {
+    
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 测试直接缓冲区，allocateDirect, isDirect
+     </span><span style="color: #008000;">*/</span><span style="color: #000000;">
+    @Test
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> test3(){
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">分配直接缓冲区</span>
+        ByteBuffer buf = ByteBuffer.allocateDirect(1024<span style="color: #000000;">);
+        
+        System.out.println(buf.isDirect());
+    }
+    
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 测试常用方法:mark, reset, hasRemaining, remaining
+     </span><span style="color: #008000;">*/</span><span style="color: #000000;">
+    @Test
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> test2(){
+        String str </span>= "abcde"<span style="color: #000000;">;
+        
+        ByteBuffer buf </span>= ByteBuffer.allocate(1024<span style="color: #000000;">);
+        
+        buf.put(str.getBytes());
+        
+        buf.flip();
+        
+        </span><span style="color: #0000ff;">byte</span>[] dst = <span style="color: #0000ff;">new</span> <span style="color: #0000ff;">byte</span><span style="color: #000000;">[buf.limit()];
+        buf.get(dst, </span>0, 2<span style="color: #000000;">);
+        System.out.println(</span><span style="color: #0000ff;">new</span> String(dst, 0, 2<span style="color: #000000;">));
+        System.out.println(buf.position());
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">mark() : 标记</span>
+<span style="color: #000000;">        buf.mark();
+        
+        buf.get(dst, </span>2, 2<span style="color: #000000;">);
+        System.out.println(</span><span style="color: #0000ff;">new</span> String(dst, 2, 2<span style="color: #000000;">));
+        System.out.println(buf.position());
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">reset() : 恢复到 mark 的位置</span>
+<span style="color: #000000;">        buf.reset();
+        System.out.println(buf.position());
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">判断缓冲区中是否还有剩余数据</span>
+        <span style="color: #0000ff;">if</span><span style="color: #000000;">(buf.hasRemaining()){
+            
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">获取缓冲区中可以操作的数量</span>
+<span style="color: #000000;">            System.out.println(buf.remaining());
+        }
+    }
+    
+    @Test
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 测试常用方法：allocate, position, limit, capacity, put, get, flip, rewind, clear, 
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> test1(){
+        String str </span>= "abcde"<span style="color: #000000;">;
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">1. 分配一个指定大小的缓冲区</span>
+        ByteBuffer buf = ByteBuffer.allocate(1024<span style="color: #000000;">);
+        
+        System.out.println(</span>"-----------------allocate()----------------"<span style="color: #000000;">);
+        System.out.println(buf.position());
+        System.out.println(buf.limit());
+        System.out.println(buf.capacity());
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">2. 利用 put() 存入数据到缓冲区中</span>
+<span style="color: #000000;">        buf.put(str.getBytes());
+        
+        System.out.println(</span>"-----------------put()----------------"<span style="color: #000000;">);
+        System.out.println(buf.position());
+        System.out.println(buf.limit());
+        System.out.println(buf.capacity());
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">3. 切换读取数据模式，limit = position, position=0</span>
+<span style="color: #000000;">        buf.flip();
+        
+        System.out.println(</span>"-----------------flip()----------------"<span style="color: #000000;">);
+        System.out.println(buf.position());
+        System.out.println(buf.limit());
+        System.out.println(buf.capacity());
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">4. 利用 get() 读取缓冲区中的数据</span>
+        <span style="color: #0000ff;">byte</span>[] dst = <span style="color: #0000ff;">new</span> <span style="color: #0000ff;">byte</span><span style="color: #000000;">[buf.limit()];
+        buf.get(dst);
+        System.out.println(</span><span style="color: #0000ff;">new</span> String(dst, 0<span style="color: #000000;">, dst.length));
+        
+        System.out.println(</span>"-----------------get()----------------"<span style="color: #000000;">);
+        System.out.println(buf.position());
+        System.out.println(buf.limit());
+        System.out.println(buf.capacity());
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">5. rewind() : 可重复读, position = 0</span>
+<span style="color: #000000;">        buf.rewind();
+        
+        System.out.println(</span>"-----------------rewind()----------------"<span style="color: #000000;">);
+        System.out.println(buf.position());
+        System.out.println(buf.limit());
+        System.out.println(buf.capacity());
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">6. clear() : 清空缓冲区. 但是缓冲区中的数据依然存在，但是处于“被遗忘”状态, position=0, limit = capacity</span>
+<span style="color: #000000;">        buf.clear();
+        
+        System.out.println(</span>"-----------------clear()----------------"<span style="color: #000000;">);
+        System.out.println(buf.position());
+        System.out.println(buf.limit());
+        System.out.println(buf.capacity());
+        
+        System.out.println((</span><span style="color: #0000ff;">char</span><span style="color: #000000;">)buf.get());
+        
+    }
+
+}</span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p>　　<span style="color: #008080;">TestChannel类</span></p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="color: #0000ff;">package</span><span style="color: #000000;"> com.atguigu.nio;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.io.FileInputStream;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.io.FileOutputStream;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.io.IOException;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.io.RandomAccessFile;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.ByteBuffer;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.CharBuffer;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.MappedByteBuffer;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.channels.FileChannel;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.channels.FileChannel.MapMode;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.charset.CharacterCodingException;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.charset.Charset;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.charset.CharsetDecoder;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.charset.CharsetEncoder;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.file.Paths;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.nio.file.StandardOpenOption;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.util.Map;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.util.Map.Entry;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.util.Set;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> org.junit.Test;
+
+</span><span style="color: #008000;">/*</span><span style="color: #008000;">
+ * 一、通道（Channel）：用于源节点与目标节点的连接。在 Java NIO 中负责缓冲区中数据的传输。Channel 本身不存储数据，因此需要配合缓冲区进行传输。
+ * 
+ * 二、通道的主要实现类
+ *     java.nio.channels.Channel 接口：
+ *         |--FileChannel
+ *         |--SocketChannel
+ *         |--ServerSocketChannel
+ *         |--DatagramChannel
+ * 
+ * 三、获取通道
+ * 1. Java 针对支持通道的类提供了 getChannel() 方法
+ *         本地 IO：
+ *         FileInputStream/FileOutputStream
+ *         RandomAccessFile
+ * 
+ *         网络IO：
+ *         Socket
+ *         ServerSocket
+ *         DatagramSocket
+ *         
+ * 2. 在 JDK 1.7 中的 NIO.2 针对各个通道提供了静态方法 open()
+ * 3. 在 JDK 1.7 中的 NIO.2 的 Files 工具类的 newByteChannel()
+ * 
+ * 四、通道之间的数据传输
+ * transferFrom()
+ * transferTo()
+ * 
+ * 五、分散(Scatter)与聚集(Gather)
+ * 分散读取（Scattering Reads）：将通道中的数据分散到多个缓冲区中
+ * 聚集写入（Gathering Writes）：将多个缓冲区中的数据聚集到通道中
+ * 
+ * 六、字符集：Charset
+ * 编码：字符串 -&gt; 字节数组
+ * 解码：字节数组  -&gt; 字符串
+ * 
+ </span><span style="color: #008000;">*/</span>
+
+<span style="color: #008000;">/**</span><span style="color: #008000;">
+ * 关于网络间通道和内存映射文件处理大文件的内容查看相关资料
+ * </span><span style="color: #808080;">@author</span><span style="color: #008000;"> Administrator
+ *
+ </span><span style="color: #008000;">*/</span>
+<span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> TestChannel {
+    
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">字符编解码forName, encode, decode</span>
+<span style="color: #000000;">    @Test
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> test6() <span style="color: #0000ff;">throws</span><span style="color: #000000;"> IOException{
+        Charset cs1 </span>= Charset.forName("GBK"<span style="color: #000000;">);
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">获取编码器</span>
+        CharsetEncoder ce =<span style="color: #000000;"> cs1.newEncoder();
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">获取解码器</span>
+        CharsetDecoder cd =<span style="color: #000000;"> cs1.newDecoder();
+        
+        CharBuffer cBuf </span>= CharBuffer.allocate(1024<span style="color: #000000;">);
+        cBuf.put(</span>"尚硅谷威武！"<span style="color: #000000;">);
+        cBuf.flip();
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">编码</span>
+        ByteBuffer bBuf =<span style="color: #000000;"> ce.encode(cBuf);
+        
+        </span><span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> i = 0; i &lt; 12; i++<span style="color: #000000;">) {
+            System.out.println(bBuf.get());
+        }
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">解码</span>
+<span style="color: #000000;">        bBuf.flip();
+        CharBuffer cBuf2 </span>=<span style="color: #000000;"> cd.decode(bBuf);
+        System.out.println(cBuf2.toString());
+        
+        System.out.println(</span>"------------------------------------------------------"<span style="color: #000000;">);
+        
+        Charset cs2 </span>= Charset.forName("GBK"<span style="color: #000000;">);
+        bBuf.flip();
+        CharBuffer cBuf3 </span>=<span style="color: #000000;"> cs2.decode(bBuf);
+        System.out.println(cBuf3.toString());
+    }
+    
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 获取所有可用字符集
+     </span><span style="color: #008000;">*/</span><span style="color: #000000;">
+    @Test
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> test5(){
+        Map</span>&lt;String, Charset&gt; map =<span style="color: #000000;"> Charset.availableCharsets();
+        
+        Set</span>&lt;Entry&lt;String, Charset&gt;&gt; set =<span style="color: #000000;"> map.entrySet();
+        
+        </span><span style="color: #0000ff;">for</span> (Entry&lt;String, Charset&gt;<span style="color: #000000;"> entry : set) {
+            System.out.println(entry.getKey() </span>+ "=" +<span style="color: #000000;"> entry.getValue());
+        }
+    }
+    
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">分散和聚集，将通道数据读入多个缓冲，再从多个缓冲读取数据写入通道</span>
+<span style="color: #000000;">    @Test
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> test4() <span style="color: #0000ff;">throws</span><span style="color: #000000;"> IOException{
+        RandomAccessFile raf1 </span>= <span style="color: #0000ff;">new</span> RandomAccessFile("1.txt", "rw"<span style="color: #000000;">);
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">1. 获取通道</span>
+        FileChannel channel1 =<span style="color: #000000;"> raf1.getChannel();
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">2. 分配指定大小的缓冲区</span>
+        ByteBuffer buf1 = ByteBuffer.allocate(100<span style="color: #000000;">);
+        ByteBuffer buf2 </span>= ByteBuffer.allocate(1024<span style="color: #000000;">);
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">3. 分散读取</span>
+        ByteBuffer[] bufs =<span style="color: #000000;"> {buf1, buf2};
+        channel1.read(bufs);
+        
+        </span><span style="color: #0000ff;">for</span><span style="color: #000000;"> (ByteBuffer byteBuffer : bufs) {
+            byteBuffer.flip();
+        }
+        
+        System.out.println(</span><span style="color: #0000ff;">new</span> String(bufs[0].array(), 0, bufs[0<span style="color: #000000;">].limit()));
+        System.out.println(</span>"-----------------"<span style="color: #000000;">);
+        System.out.println(</span><span style="color: #0000ff;">new</span> String(bufs[1].array(), 0, bufs[1<span style="color: #000000;">].limit()));
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">4. 聚集写入</span>
+        RandomAccessFile raf2 = <span style="color: #0000ff;">new</span> RandomAccessFile("2.txt", "rw"<span style="color: #000000;">);
+        FileChannel channel2 </span>=<span style="color: #000000;"> raf2.getChannel();
+        
+        channel2.write(bufs);
+    }
+    
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">通道之间的数据传输(直接缓冲区),不借助缓冲，直接在通道间传输数据</span>
+<span style="color: #000000;">    @Test
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> test3() <span style="color: #0000ff;">throws</span><span style="color: #000000;"> IOException{
+        FileChannel inChannel </span>= FileChannel.open(Paths.get("d:/1.mkv"<span style="color: #000000;">), StandardOpenOption.READ);
+        FileChannel outChannel </span>= FileChannel.open(Paths.get("d:/2.mkv"<span style="color: #000000;">), StandardOpenOption.WRITE, StandardOpenOption.READ, StandardOpenOption.CREATE);
+        
+</span><span style="color: #008000;">//</span><span style="color: #008000;">        inChannel.transferTo(0, inChannel.size(), outChannel);</span>
+        outChannel.transferFrom(inChannel, 0<span style="color: #000000;">, inChannel.size());
+        
+        inChannel.close();
+        outChannel.close();
+    }
+    
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">使用直接缓冲区完成文件的复制(内存映射文件)：通过通道映射内存映射文件</span>
+<span style="color: #000000;">    @Test
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> test2() <span style="color: #0000ff;">throws</span> IOException{<span style="color: #008000;">//</span><span style="color: #008000;">2127-1902-1777</span>
+        <span style="color: #0000ff;">long</span> start =<span style="color: #000000;"> System.currentTimeMillis();
+        
+        FileChannel inChannel </span>= FileChannel.open(Paths.get("d:/1.mkv"<span style="color: #000000;">), StandardOpenOption.READ);
+        FileChannel outChannel </span>= FileChannel.open(Paths.get("d:/2.mkv"<span style="color: #000000;">), StandardOpenOption.WRITE, StandardOpenOption.READ, StandardOpenOption.CREATE);
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">内存映射文件</span>
+        MappedByteBuffer inMappedBuf = inChannel.map(MapMode.READ_ONLY, 0<span style="color: #000000;">, inChannel.size());
+        MappedByteBuffer outMappedBuf </span>= outChannel.map(MapMode.READ_WRITE, 0<span style="color: #000000;">, inChannel.size());
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">直接对缓冲区进行数据的读写操作</span>
+        <span style="color: #0000ff;">byte</span>[] dst = <span style="color: #0000ff;">new</span> <span style="color: #0000ff;">byte</span><span style="color: #000000;">[inMappedBuf.limit()];
+        inMappedBuf.get(dst);
+        outMappedBuf.put(dst);
+        
+        inChannel.close();
+        outChannel.close();
+        
+        </span><span style="color: #0000ff;">long</span> end =<span style="color: #000000;"> System.currentTimeMillis();
+        System.out.println(</span>"耗费时间为：" + (end -<span style="color: #000000;"> start));
+    }
+    
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">利用通道完成文件的复制（非直接缓冲区）:通过文件输入输出流得到通道，通过缓冲作为中介传输通道中的数据，
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 类似于输入输出流和字节数组</span>
+<span style="color: #000000;">    @Test
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> test1(){<span style="color: #008000;">//</span><span style="color: #008000;">10874-10953</span>
+        <span style="color: #0000ff;">long</span> start =<span style="color: #000000;"> System.currentTimeMillis();
+        
+        FileInputStream fis </span>= <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+        FileOutputStream fos </span>= <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">①获取通道</span>
+        FileChannel inChannel = <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+        FileChannel outChannel </span>= <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+        </span><span style="color: #0000ff;">try</span><span style="color: #000000;"> {
+            fis </span>= <span style="color: #0000ff;">new</span> FileInputStream("d:/1.mkv"<span style="color: #000000;">);
+            fos </span>= <span style="color: #0000ff;">new</span> FileOutputStream("d:/2.mkv"<span style="color: #000000;">);
+            
+            inChannel </span>=<span style="color: #000000;"> fis.getChannel();
+            outChannel </span>=<span style="color: #000000;"> fos.getChannel();
+            
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">②分配指定大小的缓冲区</span>
+            ByteBuffer buf = ByteBuffer.allocate(1024<span style="color: #000000;">);
+            
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">③将通道中的数据存入缓冲区中</span>
+            <span style="color: #0000ff;">while</span>(inChannel.read(buf) != -1<span style="color: #000000;">){
+                buf.flip(); </span><span style="color: #008000;">//</span><span style="color: #008000;">切换读取数据的模式
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">④将缓冲区中的数据写入通道中</span>
+<span style="color: #000000;">                outChannel.write(buf);
+                buf.clear(); </span><span style="color: #008000;">//</span><span style="color: #008000;">清空缓冲区</span>
+<span style="color: #000000;">            }
+        } </span><span style="color: #0000ff;">catch</span><span style="color: #000000;"> (IOException e) {
+            e.printStackTrace();
+        } </span><span style="color: #0000ff;">finally</span><span style="color: #000000;"> {
+            </span><span style="color: #0000ff;">if</span>(outChannel != <span style="color: #0000ff;">null</span><span style="color: #000000;">){
+                </span><span style="color: #0000ff;">try</span><span style="color: #000000;"> {
+                    outChannel.close();
+                } </span><span style="color: #0000ff;">catch</span><span style="color: #000000;"> (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            
+            </span><span style="color: #0000ff;">if</span>(inChannel != <span style="color: #0000ff;">null</span><span style="color: #000000;">){
+                </span><span style="color: #0000ff;">try</span><span style="color: #000000;"> {
+                    inChannel.close();
+                } </span><span style="color: #0000ff;">catch</span><span style="color: #000000;"> (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            
+            </span><span style="color: #0000ff;">if</span>(fos != <span style="color: #0000ff;">null</span><span style="color: #000000;">){
+                </span><span style="color: #0000ff;">try</span><span style="color: #000000;"> {
+                    fos.close();
+                } </span><span style="color: #0000ff;">catch</span><span style="color: #000000;"> (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            
+            </span><span style="color: #0000ff;">if</span>(fis != <span style="color: #0000ff;">null</span><span style="color: #000000;">){
+                </span><span style="color: #0000ff;">try</span><span style="color: #000000;"> {
+                    fis.close();
+                } </span><span style="color: #0000ff;">catch</span><span style="color: #000000;"> (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        
+        </span><span style="color: #0000ff;">long</span> end =<span style="color: #000000;"> System.currentTimeMillis();
+        System.out.println(</span>"耗费时间为：" + (end -<span style="color: #000000;"> start));
+        
+    }
+
+}</span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div></div></div><div id="MySignature" style="display: block;">When I desperate: this's life; and conscious: that's lie; more frequently: there's light.</div>
+<div class="clear"></div>
+<div id="blog_post_info_block">
+<div id="BlogPostCategory">分类: <a href="https://www.cnblogs.com/liunianfeiyu/category/1027292.html" target="_blank">java</a></div>
+<div id="EntryTag"></div>
+<div id="blog_post_info"><div id="green_channel">
+        <a href="javascript:void(0);" id="green_channel_digg" onclick="DiggIt(8797017,cb_blogId,1);green_channel_success(this,'谢谢推荐！');">好文要顶</a>
+            <a id="green_channel_follow" onclick="follow('f22ce207-f29f-4312-ffd1-08d49c352df2');" href="javascript:void(0);">关注我</a>
+    <a id="green_channel_favorite" onclick="AddToWz(cb_entryId);return false;" href="javascript:void(0);">收藏该文</a>
+    <a id="green_channel_weibo" href="javascript:void(0);" title="分享至新浪微博" onclick="ShareToTsina()"><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/icon_weibo_24.png" alt=""></a>
+    <a id="green_channel_wechat" href="javascript:void(0);" title="分享至微信" onclick="shareOnWechat()"><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/wechat.png" alt=""></a>
+</div>
+<div id="author_profile">
+    <div id="author_profile_info" class="author_profile_info">
+            <a href="http://home.cnblogs.com/u/liunianfeiyu/" target="_blank"><img src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/20180209230130.png" class="author_avatar" alt=""></a>
+        <div id="author_profile_detail" class="author_profile_info">
+            <a href="http://home.cnblogs.com/u/liunianfeiyu/">流年飞雨</a><br>
+            <a href="http://home.cnblogs.com/u/liunianfeiyu/followees">关注 - 28</a><br>
+            <a href="http://home.cnblogs.com/u/liunianfeiyu/followers">粉丝 - 12</a>
+        </div>
+    </div>
+    <div class="clear"></div>
+    <div id="author_profile_honor"></div>
+    <div id="author_profile_follow">
+    </div>
+</div>
+<div id="div_digg">
+    <div class="diggit" onclick="votePost(8797017,'Digg')">
+        <span class="diggnum" id="digg_count">0</span>
+    </div>
+    <div class="buryit" onclick="votePost(8797017,'Bury')">
+        <span class="burynum" id="bury_count">0</span>
+    </div>
+    <div class="clear"></div>
+    <div class="diggword" id="digg_tips">
+    </div>
+</div>
+<script type="text/javascript">
+    currentDiggType = 0;
+</script></div>
+<div class="clear"></div>
+<div id="post_next_prev"><a href="https://www.cnblogs.com/liunianfeiyu/p/8485720.html" class="p_n_p_prefix">« </a> 上一篇：<a href="https://www.cnblogs.com/liunianfeiyu/p/8485720.html" title="发布于2018-04-05 17:02">springMVC学习记录3-拦截器和文件上传</a><br><a href="https://www.cnblogs.com/liunianfeiyu/p/8909869.html" class="p_n_p_prefix">» </a> 下一篇：<a href="https://www.cnblogs.com/liunianfeiyu/p/8909869.html" title="发布于2018-04-22 21:58">XML学习记录1-复习SAX，DOM和JAXB</a><br></div>
+</div>
+
+
+	<div class="postDesc">posted on <span id="post-date">2018-04-11 23:03</span> <a href="https://www.cnblogs.com/liunianfeiyu/">流年飞雨</a> 阅读(<span id="post_view_count">43</span>) 评论(<span id="post_comment_count">0</span>)  <a href="https://i.cnblogs.com/EditPosts.aspx?postid=8797017" rel="nofollow">编辑</a> <a href="#" onclick="AddToWz(8797017);return false;">收藏</a></div>
+</div>
+<script type="text/javascript">var allowComments=true,cb_blogId=364453,cb_entryId=8797017,cb_blogApp=currentBlogApp,cb_blogUserGuid='f22ce207-f29f-4312-ffd1-08d49c352df2',cb_entryCreatedDate='2018/4/11 23:03:00';loadViewCount(cb_entryId);var cb_postType=1;var isMarkdown=false;</script>
+
+</div><a name="!comments"></a><div id="blog-comments-placeholder"></div><script type="text/javascript">var commentManager = new blogCommentManager();commentManager.renderComments(0);</script>
+<div id="comment_form" class="commentform">
+<a name="commentform"></a>
+<div id="divCommentShow"></div>
+<div id="comment_nav"><span id="span_refresh_tips"></span><a href="javascript:void(0);" onclick="return RefreshCommentList();" id="lnk_RefreshComments" runat="server" clientidmode="Static">刷新评论</a><a href="#" onclick="return RefreshPage();">刷新页面</a><a href="#top">返回顶部</a></div>
+<div id="comment_form_container"><script type="text/javascript" src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/mention.js"></script>
+<div id="commentform_title">发表评论</div>
+<span id="tip_comment" style="color:Red"></span>
+<p>
+昵称：<input type="text" id="tbCommentAuthor" class="author" disabled="disabled" size="50" value="流年飞雨">
+</p>
+<div class="commentbox_main">
+<div class="commentbox_title">
+<div class="commentbox_title_left">评论内容：</div>
+<div class="commentbox_title_right">
+<img id="ubb_quote" class="comment_icon" src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/quote.gif" alt="引用" title="添加引用" onclick="insertUBB('tbCommentBody','quote')">
+<img id="ubb_bold" class="comment_icon" src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/b.png" alt="粗体" title="添加粗体" onclick="insertUBB('tbCommentBody','b')">
+<img id="ubb_url" class="comment_icon" src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/lk.png" alt="链接" title="添加链接" onclick="insertUbbUrl('tbCommentBody')">
+<img id="ubb_indent" class="comment_icon" src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/indent.png" alt="缩进" title="添加首行缩进" onclick="insertIndent('tbCommentBody')">
+<img id="ubb_code" class="comment_icon" src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/InsertCode.gif" alt="代码" title="添加代码" onclick="insertUbbCode()">
+<img id="ubb_img" class="comment_icon" src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/img.gif" alt="图片" title="上传图片" onclick="OpenImageUploadWindow();">
+</div>
+</div>
+<div class="clear"></div>
+<textarea id="tbCommentBody" class="comment_textarea"></textarea>
+</div>
+<p id="commentbox_opt">
+<input id="btn_comment_submit" type="button" class="comment_btn" value="提交评论">
+<span id="span_comment_canceledit" style="display:none"><a href="javascript:void(0);" onclick="return CancelCommentEdit()">不改了</a></span>
+<a href="javascript:void(0);" onclick="return logout();">退出</a>
+</p>
+<div id="tip_comment2" style="color:Red"></div>
+<p>
+[Ctrl+Enter快捷键提交]
+</p>
+<div style="display:none">
+<span id="comment_edit_id"></span><span id="span_parentcomment_id"></span>
+<span id="span_parent_id"></span>
+<span id="span_comment_replyto"></span>
+<span id="span_comment_posted"></span>
+</div>
+</div>
+<div class="ad_text_commentbox" id="ad_text_under_commentbox"></div>
+<div id="ad_t2"><a href="http://www.ucancode.com/index.htm" target="_blank" onclick="ga('send', 'event', 'Link', 'click', 'T2-工控')">【推荐】超50万C++/C#源码: 大型实时仿真组态图形源码</a><br><a href="https://cloud.baidu.com/campaign/purchase-2019/index.html?track=cp:dsp|pf:pc|pp:chui-bokeyuan-huodong-19caigouji-BCC-neiyeCH-190311|pu:neiyeCH-wenzilian|ci:2019cgj|kw:2105959" target="_blank" onclick="ga('send', 'event', 'Link', 'click', 'T2-百度云')">【推荐】百度云“猪”你开年行大运，红包疯狂拿，低至1折</a><br><a href="https://gitee.com/enterprises?from=bky-2" target="_blank" onclick="ga('send', 'event', 'Link', 'click', 'T2-gitee')">【推荐】专业便捷的企业级代码托管服务 - Gitee 码云</a><br><a href="https://www.bagevent.com/event/2468856" target="_blank" onclick="ga('send', 'event', 'Link', 'click', 'T2-GAITC')">【活动】2019第四届全球人工技术大会解码“智能+时代”</a><br></div>
+<div id="opt_under_post"></div>
+<script async="async" src="JAVA%20NIO%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%951-buffer%E5%92%8Cchannel%20-%20%E6%B5%81%E5%B9%B4%E9%A3%9E%E9%9B%A8%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/gpt.js"></script>
+<script>
+  var googletag = googletag || {};
+  googletag.cmd = googletag.cmd || [];
+</script>
+<script>
+  googletag.cmd.push(function() {
+        googletag.defineSlot('/1090369/C1', [300, 250], 'div-gpt-ad-1546353474406-0').addService(googletag.pubads());
+        googletag.defineSlot('/1090369/C2', [468, 60], 'div-gpt-ad-1539008685004-0').addService(googletag.pubads());
+        googletag.pubads().enableSingleRequest();
+        googletag.enableServices();
+  });
+</script>
+<div id="cnblogs_c1" class="c_ad_block">
+    <div id="div-gpt-ad-1546353474406-0" style="height:250px; width:300px;"></div>
+</div>
+<div id="under_post_news"><div class="itnews c_ad_block"><b>相关博文：</b><br>·  <a href="https://www.cnblogs.com/iscys/p/9658302.html" target="_blank" onclick="clickRecomItmem(9658302)">javaNIOBuffer详解（1）</a><br>·  <a href="https://www.cnblogs.com/pony1223/p/8179804.html" target="_blank" onclick="clickRecomItmem(8179804)">JAVA NIO学习二：通道（Channel）与缓冲区（Buffer）</a><br>·  <a href="https://www.cnblogs.com/wxd0108/p/6742352.html" target="_blank" onclick="clickRecomItmem(6742352)">NIO Channel和Buffer</a><br>·  <a href="https://www.cnblogs.com/huanglog/p/10255615.html" target="_blank" onclick="clickRecomItmem(10255615)">NIO之Channel、Buffer</a><br>·  <a href="https://www.cnblogs.com/wade-luffy/p/8448655.html" target="_blank" onclick="clickRecomItmem(8448655)">NIO的Buffer&amp;Channel&amp;Selector</a><br></div></div>
+<div id="cnblogs_c2" class="c_ad_block">
+    <div id="div-gpt-ad-1539008685004-0" style="height:60px; width:468px;"></div>
+</div>
+<div id="under_post_kb"><div class="itnews c_ad_block"><b>最新新闻</b>：<br> ·  <a href="https://news.cnblogs.com/n/623306/" target="_blank">波音飞船不载人试飞时间推迟至8月 载人试飞也将推迟</a><br> ·  <a href="https://news.cnblogs.com/n/623305/" target="_blank">苹果将继续推出小尺寸iPhone 搭载A12处理器</a><br> ·  <a href="https://news.cnblogs.com/n/623304/" target="_blank">UCloud想吃科创板的“第一个螃蟹”</a><br> ·  <a href="https://news.cnblogs.com/n/623303/" target="_blank">苹果HomePod降价500元：支持24期免息分期</a><br> ·  <a href="https://news.cnblogs.com/n/623302/" target="_blank">三星开始量产5G芯片：要做行业领导者</a><br>» <a href="http://news.cnblogs.com/" title="IT新闻" target="_blank">更多新闻...</a></div></div>
+<div id="HistoryToday" class="c_ad_block"></div>
+<script type="text/javascript">
+ if(enablePostBottom()) {
+    codeHighlight();
+    fixPostBody();
+    setTimeout(function () { incrementViewCount(cb_entryId); }, 50);
+    deliverT2();
+    deliverC1();
+    deliverC2();    
+    loadNewsAndKb();
+    loadBlogSignature();
+    LoadPostInfoBlock(cb_blogId, cb_entryId, cb_blogApp, cb_blogUserGuid);
+    GetPrevNextPost(cb_entryId, cb_blogId, cb_entryCreatedDate, cb_postType);
+    loadOptUnderPost();
+    GetHistoryToday(cb_blogId, cb_blogApp, cb_entryCreatedDate);  
+}
+</script>
+</div>
+
+    
+	
+<!--done-->
+<div class="footer">
+	
+	Copyright ©2019 流年飞雨 Powered by: <a href="http://www.cnblogs.com/" class="footerlink">博客园</a> 模板提供：<a href="http://blog.hjenglish.com/" class="footerlink">沪江博客</a><br>
+</div>
+</div>
+
+
+
+
+
+
+</body></html>
