@@ -5,8 +5,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Transparency;
-import java.awt.image.BufferedImage;
+import java.awt.RenderingHints;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -30,16 +29,19 @@ public class MessageShowLabel extends JLabel {
 	    setOpaque(true);
 	    setBackground(Color.GRAY);
 	    setForeground(Color.GREEN);
-	    setFont(new Font("微软雅黑", Font.PLAIN, 15));
+	    setFont(new Font("微软雅黑", Font.PLAIN, 20));
 	}
 	
 	@Override
 	public void paint(Graphics g) {
 		super.paint(g);
+		// 字体平滑处理
+		((Graphics2D)g).setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		//((Graphics2D)g).setRenderingHint(RenderingHints.KEY_STROKE_CONTROL,RenderingHints.VALUE_STROKE_DEFAULT);
 		
 		for(Message message: showMsgs)
 		{
-			g.drawString(message.getMsg(), centerX - g.getFontMetrics(new Font("微软雅黑", Font.PLAIN, 15)).stringWidth(message.getMsg()) / 2, message.getY());
+			g.drawString(message.getMsg(), centerX - g.getFontMetrics(new Font("微软雅黑", Font.PLAIN, 20)).stringWidth(message.getMsg()) / 2, message.getY());
 		}
 		
 		changeMessages();
